@@ -1,0 +1,614 @@
+﻿.gallery-page {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+    linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.floating-clouds {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 4rem;
+  opacity: 0.2;
+  animation: float 25s infinite ease-in-out;
+  filter: blur(1px);
+}
+
+.cloud-1 { top: 10%; left: 10%; animation-delay: 0s; }
+.cloud-2 { top: 30%; right: 15%; animation-delay: 8s; }
+.cloud-3 { top: 60%; left: 20%; animation-delay: 15s; }
+
+.floating-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  font-size: 1.8rem;
+  animation: twinkle 3s infinite ease-in-out;
+}
+
+.star-1 { top: 15%; right: 25%; animation-delay: 0s; }
+.star-2 { top: 45%; right: 10%; animation-delay: 1s; }
+.star-3 { top: 70%; right: 30%; animation-delay: 2s; }
+.star-4 { top: 25%; left: 30%; animation-delay: 1.5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-30px) translateX(15px); }
+  50% { transform: translateY(-15px) translateX(30px); }
+  75% { transform: translateY(-25px) translateX(10px); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+}
+
+.hero-section {
+  position: relative;
+  z-index: 1;
+  padding: 5rem 2rem 4rem !important;
+  margin: 0 2rem 3rem !important;
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%);
+  border-radius: 32px;
+  border: 6px solid #fbbf24;
+  box-shadow: 
+    0 0 0 10px #1e1b4b,
+    0 25px 70px rgba(236, 72, 153, 0.6),
+    inset 0 -5px 25px rgba(0, 0, 0, 0.3);
+  animation: heroFloat 6s ease-in-out infinite;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.bouncy-title {
+  animation: bounce 2.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+.cartoon-title {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 
+    5px 5px 0 #1e1b4b, 
+    10px 10px 0 rgba(0, 0, 0, 0.3), 
+    0 0 35px rgba(251, 191, 36, 0.6);
+  letter-spacing: 3px;
+  margin-bottom: 1.5rem;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.subtitle-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fef3c7;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+  margin-bottom: 2.5rem;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #1e1b4b !important;
+  font-weight: 900 !important;
+  font-size: 1.3rem !important;
+  padding: 32px 56px !important;
+  height: auto !important;
+  border-radius: 50px !important;
+  border: 5px solid #ffffff !important;
+  box-shadow: 0 10px 0 #b45309, 0 15px 35px rgba(251, 191, 36, 0.6) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  transition: all 0.2s ease !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+}
+
+.create-btn:hover {
+  transform: translateY(-5px) scale(1.08) !important;
+  box-shadow: 0 15px 0 #b45309, 0 20px 45px rgba(251, 191, 36, 0.8) !important;
+}
+
+.create-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 5px 0 #b45309, 0 8px 25px rgba(251, 191, 36, 0.6) !important;
+}
+
+.sort-toggle {
+  background: #1e1b4b !important;
+  border-radius: 50px !important;
+  border: 5px solid #8b5cf6 !important;
+  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.5) !important;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.toggle-btn {
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  color: #e9d5ff !important;
+  padding: 22px 40px !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+.toggle-btn.v-btn--active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+  color: #ffffff !important;
+  transform: scale(1.08);
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.toggle-btn:hover {
+  background: rgba(139, 92, 246, 0.4) !important;
+  transform: scale(1.03);
+}
+
+.loading-spinner {
+  font-size: 8rem;
+  animation: spin 2.5s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #e9d5ff;
+  margin-top: 1.5rem;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.drawings-grid {
+  position: relative;
+  z-index: 1;
+  padding: 0 2rem !important;
+  margin-bottom: 4rem !important;
+}
+
+.drawing-card {
+  position: relative;
+  background: linear-gradient(145deg, #2d1b69 0%, #1e1b4b 100%) !important;
+  border-radius: 28px !important;
+  border: 6px solid #8b5cf6 !important;
+  box-shadow: 
+    0 0 0 4px #0f172a, 
+    0 15px 35px rgba(139, 92, 246, 0.5),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  overflow: visible !important;
+  cursor: pointer;
+}
+
+.drawing-card:hover {
+  transform: translateY(-15px) rotate(-2deg) scale(1.03) !important;
+  border-color: #ec4899 !important;
+  box-shadow: 
+    0 0 0 4px #0f172a, 
+    0 25px 60px rgba(236, 72, 153, 0.7),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.card-border-effect {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 32px;
+  background: linear-gradient(45deg, #8b5cf6, #ec4899, #f59e0b, #8b5cf6);
+  background-size: 400% 400%;
+  animation: gradientShift 4s ease infinite;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.drawing-card:hover .card-border-effect {
+  opacity: 0.9;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.drawing-preview {
+  height: 280px;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+  border-bottom: 4px solid #8b5cf6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.drawing-preview::after {
+  content: ' View';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(30, 27, 75, 0.95);
+  color: #fbbf24;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  font-family: 'Comic Sans MS', cursive;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.drawing-card:hover .drawing-preview::after {
+  opacity: 1;
+}
+
+.drawing-card:hover .drawing-preview {
+  border-bottom-color: #ec4899;
+}
+
+.preview-canvas {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.drawing-card:hover .preview-canvas {
+  transform: scale(1.05);
+}
+
+.card-content {
+  padding: 1.8rem !important;
+  background: linear-gradient(180deg, #2d1b69 0%, #1e1b4b 100%);
+}
+
+.drawing-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.6rem;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creator-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e9d5ff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.card-actions {
+  padding: 0 1.8rem 1.8rem !important;
+  background: #1e1b4b;
+  border-radius: 0 0 20px 20px;
+}
+
+.vote-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%) !important;
+  color: #e9d5ff !important;
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  border-radius: 50px !important;
+  border: 4px solid #8b5cf6 !important;
+  box-shadow: 0 5px 0 #2d1b69 !important;
+  text-transform: none !important;
+  transition: all 0.2s ease !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+  padding: 18px 24px !important;
+  height: auto !important;
+}
+
+.vote-btn:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 0 #2d1b69 !important;
+  border-color: #a855f7 !important;
+}
+
+.vote-btn:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 2px 0 #2d1b69 !important;
+}
+
+.vote-btn.voted {
+  background: linear-gradient(135deg, #db2777 0%, #ec4899 100%) !important;
+  border-color: #f472b6 !important;
+  animation: heartbeat 0.6s ease;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  10%, 30% { transform: scale(0.95); }
+  20%, 40%, 60%, 80% { transform: scale(1.1); }
+  50%, 70% { transform: scale(1.05); }
+}
+
+.empty-state {
+  position: relative;
+  z-index: 1;
+  padding: 6rem 2rem !important;
+  margin: 0 2rem 4rem !important;
+}
+
+.empty-icon {
+  font-size: 12rem;
+  animation: wiggle 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  75% { transform: rotate(12deg); }
+}
+
+.empty-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 
+    4px 4px 0 #1e1b4b, 
+    8px 8px 0 rgba(0, 0, 0, 0.4);
+  margin: 2.5rem 0 1.2rem;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.empty-subtitle {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #e9d5ff;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+  margin-bottom: 2.5rem;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.create-first-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 1.4rem !important;
+  padding: 36px 60px !important;
+  height: auto !important;
+  border-radius: 50px !important;
+  border: 6px solid #fbbf24 !important;
+  box-shadow: 0 12px 0 #4c1d95, 0 18px 45px rgba(139, 92, 246, 0.7) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  transition: all 0.2s ease !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+}
+
+.create-first-btn:hover {
+  transform: translateY(-8px) scale(1.08) !important;
+  box-shadow: 0 18px 0 #4c1d95, 0 25px 55px rgba(139, 92, 246, 0.9) !important;
+}
+
+.create-first-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 8px 0 #4c1d95, 0 12px 35px rgba(139, 92, 246, 0.7) !important;
+}
+
+.gallery-footer {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%) !important;
+  border-top: 6px solid #8b5cf6;
+  padding: 3rem 0 2rem !important;
+  margin-top: 4rem;
+  box-shadow: 
+    0 -5px 0 #8b5cf6,
+    0 -10px 30px rgba(139, 92, 246, 0.3);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  font-size: 3rem;
+  animation: rotate 4s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 3px 3px 0 #0f172a, 6px 6px 0 rgba(0, 0, 0, 0.3);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+}
+
+.footer-tagline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e9d5ff;
+  font-family: 'Comic Sans MS', cursive;
+  margin: 0;
+}
+
+.footer-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 1.5rem;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 20px;
+  border: 3px solid #8b5cf6;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  font-family: 'Comic Sans MS', cursive;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e9d5ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.5rem;
+  font-family: 'Comic Sans MS', cursive;
+}
+
+.stat-divider {
+  font-size: 2rem;
+  color: #8b5cf6;
+}
+
+.footer-links {
+  margin-bottom: 1rem;
+}
+
+.footer-link {
+  color: #e9d5ff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-family: 'Comic Sans MS', cursive;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.footer-link:hover {
+  color: #fbbf24;
+  transform: translateY(-2px);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.link-divider {
+  margin: 0 1rem;
+  color: #8b5cf6;
+  font-weight: 900;
+}
+
+.footer-social {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.social-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+  color: #ffffff !important;
+  border: 3px solid #fbbf24 !important;
+  box-shadow: 0 4px 0 #4c1d95 !important;
+  transition: all 0.2s ease !important;
+}
+
+.social-btn:hover {
+  transform: translateY(-3px) rotate(5deg) !important;
+  box-shadow: 0 6px 0 #4c1d95 !important;
+}
+
+.social-btn:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 0 #4c1d95 !important;
+}
+
+.footer-divider {
+  border-color: #8b5cf6 !important;
+  opacity: 0.5 !important;
+}
+
+.copyright-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #a78bfa;
+  font-family: 'Comic Sans MS', cursive;
+  margin: 0;
+  padding: 1rem 0 0;
+}
+
+@media (max-width: 960px) {
+  .cartoon-title { font-size: 3rem; }
+  .subtitle-text { font-size: 1.3rem; }
+  .hero-section { margin: 0 1rem 2rem !important; padding: 3rem 1.5rem !important; }
+  .drawings-grid { padding: 0 1rem !important; }
+  .empty-state { padding: 4rem 1rem !important; margin: 0 1rem 3rem !important; }
+  .empty-icon { font-size: 8rem; }
+  .empty-title { font-size: 2.5rem; }
+  .footer-logo { justify-content: center !important; }
+  .footer-links { text-align: center !important; }
+  .footer-social { justify-content: center !important; }
+}
+
+@media (max-width: 600px) {
+  .cartoon-title { font-size: 2.2rem; }
+  .subtitle-text { font-size: 1.1rem; }
+  .create-btn { font-size: 1.1rem !important; padding: 24px 40px !important; }
+  .cloud, .star { font-size: 2rem; }
+  .toggle-btn { font-size: 1rem !important; padding: 16px 28px !important; }
+  .drawing-title { font-size: 1.2rem; }
+  .footer-stats { flex-direction: column; gap: 15px; }
+  .stat-divider { display: none; }
+  .link-divider { margin: 0 0.7rem; }
+}

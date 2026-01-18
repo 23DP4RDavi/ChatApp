@@ -1,0 +1,10 @@
+.friends-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.friends-page h1,
+.friends-page .v-card-title {
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+}

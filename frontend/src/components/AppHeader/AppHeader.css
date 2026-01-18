@@ -1,0 +1,101 @@
+/* App Header - Cartoon Island Style */
+.app-header {
+  background: linear-gradient(135deg, #2d1b69 0%, #1e1b4b 100%) !important;
+  border-bottom: 5px solid #8b5cf6 !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+}
+
+.header-title {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+  font-weight: 900 !important;
+  font-size: 1.8rem !important;
+  color: #fbbf24 !important;
+  display: flex;
+  align-items: center;
+  text-shadow: 2px 2px 0 #1e1b4b, 4px 4px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.header-title:hover {
+  transform: scale(1.05);
+  color: #f59e0b !important;
+}
+
+.nav-btn {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+  font-weight: 700 !important;
+  color: #e9d5ff !important;
+  text-transform: none !important;
+  margin: 0 0.25rem;
+  border-radius: 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.nav-btn:hover {
+  background: rgba(139, 92, 246, 0.3) !important;
+  color: #fbbf24 !important;
+  transform: translateY(-2px);
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #1e1b4b !important;
+  font-weight: 900 !important;
+  border-radius: 50px !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 4px 0 #b45309, 0 6px 15px rgba(251, 191, 36, 0.4) !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 0 #b45309, 0 8px 20px rgba(251, 191, 36, 0.6) !important;
+}
+
+.login-btn:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 0 #b45309, 0 4px 10px rgba(251, 191, 36, 0.4) !important;
+}
+
+.user-chip {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border: 3px solid #a855f7 !important;
+  box-shadow: 0 3px 0 #4c1d95 !important;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+}
+
+.mobile-drawer {
+  background: linear-gradient(135deg, #2d1b69 0%, #1e1b4b 100%) !important;
+  border-left: 5px solid #8b5cf6 !important;
+}
+
+.mobile-nav-item {
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive !important;
+  font-weight: 700 !important;
+  color: #e9d5ff !important;
+  transition: all 0.3s ease !important;
+  border-left: 3px solid transparent;
+}
+
+.mobile-nav-item:hover {
+  background: rgba(139, 92, 246, 0.3) !important;
+  border-left-color: #fbbf24 !important;
+  color: #fbbf24 !important;
+  transform: translateX(5px);
+}
+
+.user-info-item {
+  background: rgba(139, 92, 246, 0.2) !important;
+  margin-bottom: 1rem;
+  border-left: 5px solid #8b5cf6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .header-title {
+    font-size: 1.5rem !important;
+  }
+}
