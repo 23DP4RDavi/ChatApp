@@ -53,11 +53,11 @@
           <button @click="navigateTo('/gallery')" class="feature-btn">Explore Gallery →</button>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">�</div>
-          <h3>Social Features</h3>
+          <div class="feature-icon">!!!!</div>
+          <h3>Social Features (COMMING SOON)</h3> <!-- add plz --> 
           <p>Build your profile, follow artists, share your creations, and become part of a thriving creative community</p>
           <button @click="navigateTo('/auth')" class="feature-btn">Join Now →</button>
-        </div>
+        </div> 
       </div>
     </section>
 
