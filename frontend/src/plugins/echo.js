@@ -3,6 +3,8 @@ import Pusher from 'pusher-js'
 
 window.Pusher = Pusher
 
+const getAuthToken = () => localStorage.getItem('token') || localStorage.getItem('auth_token') || ''
+
 const echo = new Echo({
   broadcaster: 'reverb',
   key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -14,7 +16,7 @@ const echo = new Echo({
   authEndpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/broadcasting/auth`,
   auth: {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('auth_token') ?? ''}`,
+      Authorization: `Bearer ${getAuthToken()}`,
     },
   },
 })
@@ -22,7 +24,7 @@ const echo = new Echo({
 // Refresh the auth token header whenever localStorage changes (login/logout)
 window.addEventListener('storage', () => {
   echo.connector.pusher.config.auth.headers.Authorization =
-    `Bearer ${localStorage.getItem('auth_token') ?? ''}`
+    `Bearer ${getAuthToken()}`
 })
 
 export default echo
