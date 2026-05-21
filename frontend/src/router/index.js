@@ -88,6 +88,11 @@ const router = createRouter({
   routes
 })
 
+const isLazyLoadFailure = (error) => {
+  const message = String(error?.message || '')
+  return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk [\d]+ failed|error loading dynamically imported module/i.test(message)
+}
+
 // Navigation guard to check authentication
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
@@ -112,6 +117,14 @@ router.beforeEach((to, from, next) => {
   } else {
     next()
   }
+})
+
+router.onError((error, to) => {
+  if (!isLazyLoadFailure(error) || !to?.fullPath) {
+    return
+  }
+
+  window.location.assign(to.fullPath)
 })
 
 export default router

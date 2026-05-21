@@ -388,6 +388,7 @@ const navigateTo = async (path) => {
     await router.push(path)
   } catch (error) {
     console.error('Navigation failed:', error)
+    window.location.assign(path)
   }
 }
 

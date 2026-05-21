@@ -297,16 +297,6 @@
               class="msg-row"
               :class="{ 'msg-row--grouped': message._grouped, 'msg-row--pinned': message.is_pinned, 'msg-row--has-reply': !!message.reply_to }">
 
-              <!-- Reply reference bar -->
-              <div v-if="message.reply_to" class="msg-reply-ref" @click.stop="scrollToMsg(message.reply_to.id)">
-                <v-avatar size="14" color="secondary" class="mr-1 flex-shrink-0">
-                  <img v-if="message.reply_to.user?.avatar_thumbnail" :src="message.reply_to.user.avatar_thumbnail" alt="" />
-                  <span v-else style="font-size:0.5rem">{{ message.reply_to.user?.name?.[0] }}</span>
-                </v-avatar>
-                <span class="msg-reply-ref-author">{{ message.reply_to.user?.name }}</span>
-                <span class="msg-reply-ref-content">{{ message.reply_to.content ? message.reply_to.content.slice(0, 80) : t('messagesPage.drawingLabel') }}</span>
-              </div>
-
               <!-- Avatar column: full avatar for first in group, hover-timestamp for grouped -->
               <div class="msg-avatar-col">
                 <v-avatar v-if="!message._grouped" size="36" class="msg-avatar-img" color="secondary">
@@ -318,6 +308,15 @@
 
               <!-- Message body -->
               <div class="msg-body">
+                <div v-if="message.reply_to" class="msg-reply-ref" @click.stop="scrollToMsg(message.reply_to.id)">
+                  <v-avatar size="14" color="secondary" class="mr-1 flex-shrink-0">
+                    <img v-if="message.reply_to.user?.avatar_thumbnail" :src="message.reply_to.user.avatar_thumbnail" alt="" />
+                    <span v-else style="font-size:0.5rem">{{ message.reply_to.user?.name?.[0] }}</span>
+                  </v-avatar>
+                  <span class="msg-reply-ref-author">{{ message.reply_to.user?.name }}</span>
+                  <span class="msg-reply-ref-content">{{ message.reply_to.content ? message.reply_to.content.slice(0, 80) : t('messagesPage.drawingLabel') }}</span>
+                </div>
+
                 <div v-if="!message._grouped" class="msg-meta">
                   <span class="msg-author"
                     :class="{ 'msg-author--self': message.user_id === currentUserId }"
@@ -1596,7 +1595,19 @@ const getConversationSubtitle = (conversation) => {
 }
 
 const getConversationPreview = (conversation) => {
-  return conversation?.latest_message?.content || t('messagesPage.startChatting')
+  const content = String(conversation?.latest_message?.content || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (content) {
+    return content
+  }
+
+  if (conversation?.latest_message?.drawing_data) {
+    return t('messagesPage.drawingLabel')
+  }
+
+  return conversation?.other_user?.username ? `@${conversation.other_user.username}` : t('messagesPage.startChatting')
 }
 
 const getConversationAvatar = (conversation) => {
@@ -2111,22 +2122,58 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || !selectedConversation.value) return
   if (selectedConversation.value.type === 'group' && !selectedChannel.value) return
 
+  const content = newMessage.value.trim()
+  const replyTarget = replyingTo.value
+  const tempId = `temp-${Date.now()}`
+
+  const optimisticMessage = {
+    id: tempId,
+    user_id: currentUserId.value,
+    conversation_id: selectedConversation.value.id,
+    channel_id: selectedChannel.value?.id ?? null,
+    content,
+    drawing_data: null,
+    reply_to_id: replyTarget?.id ?? null,
+    reply_to: replyTarget ?? null,
+    is_pinned: false,
+    edited_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user: currentUser.value || {
+      id: currentUserId.value,
+      name: 'You',
+      avatar_thumbnail: null,
+    },
+  }
+
+  messages.value.push(optimisticMessage)
+  newMessage.value = ''
+  replyingTo.value = null
+
+  nextTick(() => scrollToBottom())
+
   try {
-    const payload = { content: newMessage.value }
+    const payload = { content }
     if (selectedChannel.value) payload.channel_id = selectedChannel.value.id
-    if (replyingTo.value) payload.reply_to_id = replyingTo.value.id
+    if (replyTarget) payload.reply_to_id = replyTarget.id
 
     const response = await api.post(`/conversations/${selectedConversation.value.id}/messages`, payload)
 
     if (response.data?.data) {
-      messages.value.push(response.data.data)
+      const tempIndex = messages.value.findIndex(message => String(message.id) === tempId)
+      if (tempIndex >= 0) {
+        messages.value[tempIndex] = response.data.data
+      } else if (!messages.value.some(message => message.id === response.data.data.id)) {
+        messages.value.push(response.data.data)
+      }
     }
 
-    newMessage.value = ''
-    replyingTo.value = null
     await nextTick()
     scrollToBottom()
   } catch (error) {
+    messages.value = messages.value.filter(message => String(message.id) !== tempId)
+    newMessage.value = content
+    replyingTo.value = replyTarget
     console.error('Failed to send message:', error)
     showSnackbarMsg(error?.response?.data?.message || t('messagesPage.sendFailed') || 'Failed to send message', 'error')
   }
@@ -2422,7 +2469,7 @@ const pollMessages = async () => {
 
 const startPolling = () => {
   stopPolling()
-  pollingInterval = setInterval(pollMessages, 5000)
+  pollingInterval = setInterval(pollMessages, 1500)
 }
 
 const stopPolling = () => {
@@ -4267,19 +4314,20 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 0 2px 52px;
+  padding: 0 0 4px 18px;
   font-size: 0.72rem;
   color: var(--c-text-muted, rgba(255,255,255,0.45));
   cursor: pointer;
   line-height: 1.2;
   position: relative;
+  min-width: 0;
 }
 .msg-reply-ref::before {
   content: '';
   position: absolute;
-  left: 26px;
+  left: 0;
   top: 50%;
-  width: 20px;
+  width: 12px;
   height: 1px;
   border-top: 2px solid rgba(255,255,255,0.15);
   border-left: 2px solid rgba(255,255,255,0.15);
@@ -4288,7 +4336,7 @@ onUnmounted(() => {
 }
 .msg-reply-ref:hover { color: var(--c-text); }
 .msg-reply-ref-author { font-weight: 600; color: var(--c-text); margin-right: 4px; }
-.msg-reply-ref-content { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; }
+.msg-reply-ref-content { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: min(420px, 100%); }
 
 /* Pinned message highlight */
 .msg-row--pinned {

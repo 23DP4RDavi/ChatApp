@@ -145,18 +145,58 @@
           <div class="settings-section settings-card">
             <h3 class="section-label">{{ t('settingsPage.avatarTitle') }}</h3>
 
+            <div class="avatar-tools">
+              <div class="avatar-tools-row">
+                <span class="tool-label">Color</span>
+                <input v-model="avatarColor" type="color" class="color-picker" />
+                <button
+                  v-for="preset in avatarPresets"
+                  :key="preset"
+                  type="button"
+                  class="preset-dot"
+                  :class="{ active: avatarColor === preset }"
+                  :style="{ background: preset }"
+                  @click="avatarColor = preset"
+                />
+              </div>
+              <div class="avatar-tools-row">
+                <span class="tool-label">Brush</span>
+                <v-slider
+                  v-model="avatarBrush"
+                  :min="1"
+                  :max="20"
+                  :step="1"
+                  hide-details
+                  density="compact"
+                  color="primary"
+                  class="avatar-slider"
+                />
+                <v-btn size="small" variant="text" prepend-icon="mdi-undo" @click="undoAvatar" :disabled="avatarPaths.length === 0">
+                  Undo
+                </v-btn>
+              </div>
+            </div>
+
             <!-- Preview + draw button -->
             <div class="avatar-preview-row">
               <div class="avatar-preview-wrap">
-                <canvas ref="avatarCanvas" width="420" height="420" class="avatar-canvas" />
+                <canvas
+                  ref="avatarCanvas"
+                  width="420"
+                  height="420"
+                  class="avatar-canvas"
+                  @pointerdown.prevent="startAvatarDrawing"
+                  @pointermove.prevent="drawAvatar"
+                  @pointerup.prevent="stopAvatarDrawing"
+                  @pointerleave.prevent="stopAvatarDrawing"
+                  @pointercancel.prevent="stopAvatarDrawing"
+                />
                 <div v-if="avatarPaths.length === 0" class="avatar-empty-hint">
                   <v-icon size="32" color="rgba(255,255,255,0.2)">mdi-account-outline</v-icon>
                 </div>
               </div>
               <div class="avatar-draw-actions">
-                <v-btn color="primary" prepend-icon="mdi-draw" @click="avatarDrawDialogOpen = true">
-                  Draw Avatar
-                </v-btn>
+                <div class="tool-label">Draw directly on the avatar preview.</div>
                 <v-btn v-if="avatarPaths.length > 0" variant="outlined" color="error"
                   prepend-icon="mdi-delete" @click="clearAvatar">
                   {{ t('settingsPage.clearAvatar') }}
@@ -179,9 +219,6 @@
       {{ snackbar.text }}
     </v-snackbar>
 
-    <!-- Avatar draw dialog (1:1) -->
-    <DrawDialog v-model="avatarDrawDialogOpen" :square-only="true" @save="onAvatarDrawSave" />
-
   </div>
 </template>
 
@@ -189,7 +226,6 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
-import DrawDialog from '@/components/DrawDialog'
 
 const PREFERENCES_KEY = 'ui_preferences'
 
@@ -216,7 +252,6 @@ const avatarPaths = ref([])
 const avatarCurrentPath = ref([])
 const avatarColor = ref('#111827')
 const avatarBrush = ref(4)
-const avatarDrawDialogOpen = ref(false)
 const avatarPresets = ['#111827', '#2563eb', '#db2777', '#16a34a', '#ea580c', '#7c3aed']
 
 const preferences = ref({
@@ -456,23 +491,6 @@ const clearAvatar = () => {
   avatarPaths.value = []
   avatarCurrentPath.value = []
   redrawAvatarCanvas()
-}
-
-// Called when the full draw tool dialog emits save
-const onAvatarDrawSave = ({ dataUrl, paths: drawPaths }) => {
-  avatarPaths.value = drawPaths
-  // Re-render onto the existing 420×420 preview canvas
-  nextTick(() => {
-    if (!avatarCanvas.value) return
-    const img = new Image()
-    img.onload = () => {
-      const c = avatarCanvas.value.getContext('2d')
-      c.fillStyle = '#fff'
-      c.fillRect(0, 0, avatarCanvas.value.width, avatarCanvas.value.height)
-      c.drawImage(img, 0, 0, avatarCanvas.value.width, avatarCanvas.value.height)
-    }
-    img.src = dataUrl
-  })
 }
 
 const saveAvatar = async () => {
