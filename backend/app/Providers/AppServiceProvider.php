@@ -83,9 +83,100 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
 
+            if (!Schema::hasTable('drawings')) {
+                Schema::create('drawings', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_id');
+                    $table->string('title');
+                    $table->longText('drawing_data');
+                    $table->text('thumbnail')->nullable();
+                    $table->integer('votes_count')->default(0);
+                    $table->timestamps();
+                    $table->index(['created_at', 'votes_count']);
+                });
+            }
+
+            Schema::table('drawings', function (Blueprint $table) {
+                if (!Schema::hasColumn('drawings', 'description')) {
+                    $table->text('description')->nullable();
+                }
+                if (!Schema::hasColumn('drawings', 'is_free')) {
+                    $table->boolean('is_free')->default(false);
+                }
+                if (!Schema::hasColumn('drawings', 'theme_id')) {
+                    $table->unsignedBigInteger('theme_id')->nullable();
+                }
+            });
+
+            if (!Schema::hasTable('weekly_themes')) {
+                Schema::create('weekly_themes', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedSmallInteger('week_number');
+                    $table->unsignedSmallInteger('year');
+                    $table->string('theme_name');
+                    $table->text('description')->nullable();
+                    $table->string('emoji')->default('art');
+                    $table->string('color_hex')->default('#7c3aed');
+                    $table->date('starts_at');
+                    $table->date('ends_at');
+                    $table->timestamps();
+                    $table->unique(['week_number', 'year']);
+                });
+            }
+
+            if (!Schema::hasTable('votes')) {
+                Schema::create('votes', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('drawing_id');
+                    $table->string('voter_identifier');
+                    $table->timestamps();
+                    $table->unique(['drawing_id', 'voter_identifier']);
+                });
+            }
+
+            if (!Schema::hasTable('drawing_comments')) {
+                Schema::create('drawing_comments', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('drawing_id');
+                    $table->unsignedBigInteger('user_id');
+                    $table->text('content');
+                    $table->timestamps();
+                });
+            }
+
             if (!Schema::hasTable('conversations')) {
                 return;
             }
+
+            if (!Schema::hasTable('messages')) {
+                Schema::create('messages', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_id');
+                    $table->unsignedBigInteger('conversation_id');
+                    $table->text('content')->nullable();
+                    $table->json('drawing_data')->nullable();
+                    $table->timestamps();
+                    $table->index(['conversation_id', 'created_at']);
+                });
+            }
+
+            Schema::table('messages', function (Blueprint $table) {
+                if (!Schema::hasColumn('messages', 'channel_id')) {
+                    $table->unsignedBigInteger('channel_id')->nullable();
+                }
+                if (!Schema::hasColumn('messages', 'reply_to_id')) {
+                    $table->unsignedBigInteger('reply_to_id')->nullable();
+                }
+                if (!Schema::hasColumn('messages', 'reactions')) {
+                    $table->json('reactions')->nullable();
+                }
+                if (!Schema::hasColumn('messages', 'is_pinned')) {
+                    $table->boolean('is_pinned')->default(false);
+                }
+                if (!Schema::hasColumn('messages', 'edited_at')) {
+                    $table->timestamp('edited_at')->nullable();
+                }
+            });
 
             Schema::table('conversations', function (Blueprint $table) {
                 if (!Schema::hasColumn('conversations', 'name')) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Drawing;
 use App\Models\WeeklyTheme;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class WeeklyThemeController extends Controller
 {
@@ -70,6 +71,10 @@ class WeeklyThemeController extends Controller
     /** Get (or auto-create) the current week's theme */
     public function current()
     {
+        if (!Schema::hasTable('weekly_themes')) {
+            return response()->json(['theme' => null]);
+        }
+
         $theme = WeeklyTheme::where('starts_at', '<=', today())
             ->where('ends_at', '>=', today())
             ->first();
@@ -84,6 +89,10 @@ class WeeklyThemeController extends Controller
     /** All past theme weeks (only weeks that were actually played) */
     public function archive()
     {
+        if (!Schema::hasTable('weekly_themes')) {
+            return response()->json(['weeks' => []]);
+        }
+
         $themes = WeeklyTheme::where('ends_at', '<', today())
             ->orderBy('starts_at', 'desc')
             ->get();
@@ -94,19 +103,27 @@ class WeeklyThemeController extends Controller
     /** Top 20 drawings submitted during a specific theme week */
     public function weekDrawings($weekNumber, $year)
     {
+        if (!Schema::hasTable('weekly_themes')) {
+            return response()->json(['theme' => null, 'drawings' => []]);
+        }
+
         $theme = WeeklyTheme::where('week_number', $weekNumber)
             ->where('year', $year)
             ->firstOrFail();
 
-        $drawings = Drawing::with('user')
-            ->withCount('votes')
+        $query = Drawing::with('user')
             ->whereBetween('created_at', [
                 $theme->starts_at->startOfDay(),
                 $theme->ends_at->endOfDay(),
             ])
             ->orderBy('votes_count', 'desc')
-            ->limit(20)
-            ->get();
+            ->limit(20);
+
+        if (Schema::hasTable('votes')) {
+            $query->withCount('votes');
+        }
+
+        $drawings = $query->get();
 
         return response()->json([
             'theme'    => $theme,

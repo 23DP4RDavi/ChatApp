@@ -2131,6 +2131,7 @@ const sendMessage = async () => {
     scrollToBottom()
   } catch (error) {
     console.error('Failed to send message:', error)
+    showSnackbarMsg(error?.response?.data?.message || t('messagesPage.sendFailed') || 'Failed to send message', 'error')
   }
 }
 

@@ -6,11 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Drawing;
 use App\Models\DrawingComment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class DrawingCommentController extends Controller
 {
     public function index($drawingId)
     {
+        if (!Schema::hasTable('drawing_comments')) {
+            return response()->json(['message' => 'Comments are not available yet.'], 503);
+        }
+
         $drawing = Drawing::findOrFail($drawingId);
 
         $comments = DrawingComment::where('drawing_id', $drawing->id)
@@ -23,6 +28,10 @@ class DrawingCommentController extends Controller
 
     public function store(Request $request, $drawingId)
     {
+        if (!Schema::hasTable('drawing_comments')) {
+            return response()->json(['message' => 'Comments are not available yet.'], 503);
+        }
+
         $drawing = Drawing::findOrFail($drawingId);
 
         $validated = $request->validate([

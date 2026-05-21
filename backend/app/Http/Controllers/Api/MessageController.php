@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class MessageController extends Controller
 {
@@ -67,18 +68,36 @@ class MessageController extends Controller
             ], 422);
         }
 
-        $message = Message::create([
-            'user_id' => $userId,
-            'conversation_id' => $conversationId,
-            'channel_id' => $validated['channel_id'] ?? null,
-            'content' => $validated['content'] ? trim($validated['content']) : null,
-            'drawing_data' => $validated['drawing_data'] ?? null,
-            'reply_to_id' => $validated['reply_to_id'] ?? null,
-        ]);
+        try {
+            $payload = [
+                'user_id' => $userId,
+                'conversation_id' => $conversationId,
+                'content' => !empty($validated['content']) ? trim($validated['content']) : null,
+                'drawing_data' => $validated['drawing_data'] ?? null,
+            ];
 
-        $conversation->touch();
+            if (Schema::hasColumn('messages', 'channel_id')) {
+                $payload['channel_id'] = $validated['channel_id'] ?? null;
+            }
 
-        broadcast(new MessageSent($message))->toOthers();
+            if (Schema::hasColumn('messages', 'reply_to_id')) {
+                $payload['reply_to_id'] = $validated['reply_to_id'] ?? null;
+            }
+
+            $message = Message::create($payload);
+            $conversation->touch();
+
+            try {
+                broadcast(new MessageSent($message))->toOthers();
+            } catch (\Throwable $e) {
+                // Do not fail message send if realtime broadcast has issues.
+            }
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send message. Please try again.',
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -104,7 +123,9 @@ class MessageController extends Controller
         ]);
 
         $message->content = trim($validated['content']);
-        $message->edited_at = now();
+        if (Schema::hasColumn('messages', 'edited_at')) {
+            $message->edited_at = now();
+        }
         $message->save();
 
         return response()->json([
@@ -115,6 +136,10 @@ class MessageController extends Controller
 
     public function react(Request $request, $id)
     {
+                if (!Schema::hasColumn('messages', 'reactions')) {
+                    return response()->json(['success' => false, 'message' => 'Reactions are not available yet'], 503);
+                }
+
         $message = Message::find($id);
 
         if (!$message) {
@@ -154,6 +179,10 @@ class MessageController extends Controller
 
     public function pin(Request $request, $id)
     {
+                if (!Schema::hasColumn('messages', 'is_pinned')) {
+                    return response()->json(['success' => false, 'message' => 'Pinning is not available yet'], 503);
+                }
+
         $message = Message::find($id);
 
         if (!$message) {

@@ -8,11 +8,25 @@ use App\Models\Vote;
 use App\Models\WeeklyTheme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DrawingController extends Controller
 {
+    private function hasDrawingColumn(string $column): bool
+    {
+        try {
+            return Schema::hasTable('drawings') && Schema::hasColumn('drawings', $column);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public function index(Request $request)
     {
+        if (!Schema::hasTable('drawings')) {
+            return response()->json(['message' => 'Gallery is not available yet.'], 503);
+        }
+
         $request->validate([
             'sort'    => 'sometimes|in:recent,popular',
             'week'    => 'sometimes|in:current',
@@ -28,16 +42,31 @@ class DrawingController extends Controller
         $search  = $request->input('search', '');
         $tag     = $request->input('tag', '');
 
-        $query = Drawing::with(['user', 'theme'])->withCount('votes');
+        $hasIsFree = $this->hasDrawingColumn('is_free');
+        $hasDescription = $this->hasDrawingColumn('description');
+        $hasThemeId = $this->hasDrawingColumn('theme_id') && Schema::hasTable('weekly_themes');
+        $hasVotesTable = Schema::hasTable('votes');
+
+        $with = ['user'];
+        if ($hasThemeId) {
+            $with[] = 'theme';
+        }
+
+        $query = Drawing::with($with);
+        if ($hasVotesTable) {
+            $query->withCount('votes');
+        }
 
         // Section filter
-        if ($section === 'free') {
+        if ($section === 'free' && $hasIsFree) {
             $query->where('is_free', true);
-        } elseif ($section === 'theme') {
+        } elseif ($section === 'theme' && $hasIsFree) {
             $query->where('is_free', false);
         } elseif ($section === 'week') {
-            $query->where('is_free', false)
-                  ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            if ($hasIsFree) {
+                $query->where('is_free', false);
+            }
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
         } elseif ($section === 'mine' && $request->user()) {
             $query->where('user_id', $request->user()->id);
         }
@@ -71,8 +100,10 @@ class DrawingController extends Controller
         if ($search !== '') {
             $term = '%' . $search . '%';
             $query->where(function ($q) use ($term) {
-                $q->where('title', 'like', $term)
-                  ->orWhere('description', 'like', $term);
+                $q->where('title', 'like', $term);
+                if ($this->hasDrawingColumn('description')) {
+                    $q->orWhere('description', 'like', $term);
+                }
             });
         }
 
@@ -80,8 +111,12 @@ class DrawingController extends Controller
         if ($tag !== '') {
             $tagTerm = '%#' . ltrim($tag, '#') . '%';
             $query->where(function ($q) use ($tagTerm) {
-                $q->where('description', 'like', $tagTerm)
-                  ->orWhere('title', 'like', $tagTerm);
+                if ($this->hasDrawingColumn('description')) {
+                    $q->where('description', 'like', $tagTerm)
+                        ->orWhere('title', 'like', $tagTerm);
+                } else {
+                    $q->where('title', 'like', $tagTerm);
+                }
             });
         }
 
@@ -96,6 +131,10 @@ class DrawingController extends Controller
 
     public function store(Request $request)
     {
+        if (!Schema::hasTable('drawings')) {
+            return response()->json(['message' => 'Gallery is not available yet.'], 503);
+        }
+
         $validated = $request->validate([
             'title'        => 'required|string|max:255|min:1',
             'description'  => 'nullable|string|max:1000',
@@ -105,42 +144,79 @@ class DrawingController extends Controller
             'is_free'      => 'sometimes|boolean',
         ]);
 
-        $isFree = $request->boolean('is_free');
+        $hasIsFree = $this->hasDrawingColumn('is_free');
+        $hasDescription = $this->hasDrawingColumn('description');
+        $hasThemeId = $this->hasDrawingColumn('theme_id') && Schema::hasTable('weekly_themes');
+
+        $isFree = $hasIsFree ? $request->boolean('is_free') : false;
 
         $themeId = null;
-        if (!$isFree && $request->boolean('tag_theme')) {
+        if ($hasThemeId && !$isFree && $request->boolean('tag_theme')) {
             $theme = WeeklyTheme::where('starts_at', '<=', now())
                 ->where('ends_at', '>=', now())
                 ->first();
             $themeId = $theme?->id;
         }
 
-        $drawing = Drawing::create([
+        try {
+            $payload = [
             'user_id'      => $request->user()->id,
             'title'        => trim($validated['title']),
-            'description'  => isset($validated['description']) ? trim($validated['description']) : null,
             'drawing_data' => $validated['drawing_data'],
-            'thumbnail'    => $validated['thumbnail'] ? trim($validated['thumbnail']) : null,
+            'thumbnail'    => !empty($validated['thumbnail']) ? trim($validated['thumbnail']) : null,
             'votes_count'  => 0,
-            'theme_id'     => $themeId,
-            'is_free'      => $isFree,
-        ]);
+            ];
+
+            if ($hasDescription) {
+                $payload['description'] = isset($validated['description']) ? trim($validated['description']) : null;
+            }
+
+            if ($hasThemeId) {
+                $payload['theme_id'] = $themeId;
+            }
+
+            if ($hasIsFree) {
+                $payload['is_free'] = $isFree;
+            }
+
+            $drawing = Drawing::create($payload);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Failed to save drawing. Please try again.'], 500);
+        }
+
+        $with = ['user'];
+        if ($hasThemeId) {
+            $with[] = 'theme';
+        }
 
         return response()->json([
             'message' => 'Drawing saved successfully',
-            'data' => $drawing->load(['user', 'theme']),
+            'data' => $drawing->load($with),
         ], 201);
     }
 
     public function show($id)
     {
-        $drawing = Drawing::with('user')->withCount('votes')->findOrFail($id);
+        if (!Schema::hasTable('drawings')) {
+            return response()->json(['message' => 'Gallery is not available yet.'], 503);
+        }
+
+        $query = Drawing::with('user');
+        if (Schema::hasTable('votes')) {
+            $query->withCount('votes');
+        }
+
+        $drawing = $query->findOrFail($id);
 
         return response()->json($drawing);
     }
 
     public function vote(Request $request, $id)
     {
+        if (!Schema::hasTable('votes')) {
+            return response()->json(['message' => 'Voting is not available yet.'], 503);
+        }
+
         $drawing = Drawing::findOrFail($id);
         $voterIdentifier = 'user_' . $request->user()->id;
 
@@ -169,6 +245,10 @@ class DrawingController extends Controller
 
     public function unvote(Request $request, $id)
     {
+        if (!Schema::hasTable('votes')) {
+            return response()->json(['message' => 'Voting is not available yet.'], 503);
+        }
+
         $drawing = Drawing::findOrFail($id);
         $voterIdentifier = 'user_' . $request->user()->id;
 
@@ -193,6 +273,10 @@ class DrawingController extends Controller
 
     public function checkVote(Request $request, $id)
     {
+        if (!Schema::hasTable('votes')) {
+            return response()->json(['has_voted' => false]);
+        }
+
         $voterIdentifier = 'user_' . $request->user()->id;
 
         $hasVoted = Vote::where('drawing_id', $id)

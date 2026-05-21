@@ -14,6 +14,15 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
+    private function hasUserColumn(string $column): bool
+    {
+        try {
+            return Schema::hasTable('users') && Schema::hasColumn('users', $column);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public function googleRedirect()
     {
         try {
@@ -102,19 +111,31 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $validated = $request->validate([
+        $hasUsername = $this->hasUserColumn('username');
+
+        $rules = [
             'name' => 'required|string|max:255|min:2',
-            'username' => 'required|string|max:50|min:3|unique:users|regex:/^[a-zA-Z0-9_]+$/',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-        ]);
+        ];
 
-        $user = User::create([
+        if ($hasUsername) {
+            $rules['username'] = 'required|string|max:50|min:3|unique:users|regex:/^[a-zA-Z0-9_]+$/';
+        }
+
+        $validated = $request->validate($rules);
+
+        $payload = [
             'name' => trim($validated['name']),
-            'username' => trim($validated['username']),
             'email' => trim($validated['email']),
             'password' => Hash::make($validated['password']),
-        ]);
+        ];
+
+        if ($hasUsername) {
+            $payload['username'] = trim($validated['username']);
+        }
+
+        $user = User::create($payload);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -134,9 +155,12 @@ class AuthController extends Controller
         ]);
 
         // Try to find user by email or username
-        $user = User::where('email', $validated['login'])
-            ->orWhere('username', $validated['login'])
-            ->first();
+        $userQuery = User::where('email', $validated['login']);
+        if ($this->hasUserColumn('username')) {
+            $userQuery->orWhere('username', $validated['login']);
+        }
+
+        $user = $userQuery->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
@@ -171,16 +195,12 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $validated = $request->validate([
+        $hasUsername = $this->hasUserColumn('username');
+        $hasAvatarDrawingData = $this->hasUserColumn('avatar_drawing_data');
+        $hasAvatarThumbnail = $this->hasUserColumn('avatar_thumbnail');
+
+        $rules = [
             'name' => 'required|string|max:255|min:2',
-            'username' => [
-                'required',
-                'string',
-                'max:50',
-                'min:3',
-                'regex:/^[a-zA-Z0-9_]+$/',
-                Rule::unique('users', 'username')->ignore($user->id),
-            ],
             'email' => [
                 'required',
                 'string',
@@ -190,9 +210,28 @@ class AuthController extends Controller
             ],
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
-            'avatar_drawing_data' => 'nullable|string|max:1000000',
-            'avatar_thumbnail' => 'nullable|string|max:1000000',
-        ]);
+        ];
+
+        if ($hasUsername) {
+            $rules['username'] = [
+                'required',
+                'string',
+                'max:50',
+                'min:3',
+                'regex:/^[a-zA-Z0-9_]+$/',
+                Rule::unique('users', 'username')->ignore($user->id),
+            ];
+        }
+
+        if ($hasAvatarDrawingData) {
+            $rules['avatar_drawing_data'] = 'nullable|string|max:1000000';
+        }
+
+        if ($hasAvatarThumbnail) {
+            $rules['avatar_thumbnail'] = 'nullable|string|max:1000000';
+        }
+
+        $validated = $request->validate($rules);
 
         if (!empty($validated['password'])) {
             if (empty($validated['current_password']) || !Hash::check($validated['current_password'], $user->password)) {
@@ -205,12 +244,14 @@ class AuthController extends Controller
         }
 
         $user->name = trim($validated['name']);
-        $user->username = trim($validated['username']);
+        if ($hasUsername && array_key_exists('username', $validated)) {
+            $user->username = trim($validated['username']);
+        }
         $user->email = trim($validated['email']);
-        if (array_key_exists('avatar_drawing_data', $validated)) {
+        if ($hasAvatarDrawingData && array_key_exists('avatar_drawing_data', $validated)) {
             $user->avatar_drawing_data = $validated['avatar_drawing_data'];
         }
-        if (array_key_exists('avatar_thumbnail', $validated)) {
+        if ($hasAvatarThumbnail && array_key_exists('avatar_thumbnail', $validated)) {
             $user->avatar_thumbnail = $validated['avatar_thumbnail'];
         }
         $user->touch();
