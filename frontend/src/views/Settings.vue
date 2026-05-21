@@ -223,6 +223,7 @@ const profile = ref({
 const avatarCanvas = ref(null)
 const avatarCtx = ref(null)
 const avatarPaths = ref([])
+const avatarSourceSize = ref({ width: 420, height: 420 })
 
 const preferences = ref({
   largeText: false,
@@ -280,9 +281,16 @@ const loadUser = async () => {
     try {
       const parsed = JSON.parse(profile.value.avatar_drawing_data)
       avatarPaths.value = Array.isArray(parsed?.paths) ? parsed.paths : []
+      avatarSourceSize.value = {
+        width: Number(parsed?.width) || 420,
+        height: Number(parsed?.height) || 420,
+      }
     } catch {
       avatarPaths.value = []
+      avatarSourceSize.value = { width: 420, height: 420 }
     }
+  } else {
+    avatarSourceSize.value = { width: 420, height: 420 }
   }
 
   await nextTick()
@@ -375,9 +383,21 @@ const clearAvatarBackground = () => {
 }
 
 const redrawAvatarCanvas = () => {
-  if (!avatarCtx.value) return
+  if (!avatarCtx.value || !avatarCanvas.value) return
 
   clearAvatarBackground()
+
+  const targetWidth = avatarCanvas.value.width
+  const targetHeight = avatarCanvas.value.height
+  const sourceWidth = Math.max(1, Number(avatarSourceSize.value.width) || targetWidth)
+  const sourceHeight = Math.max(1, Number(avatarSourceSize.value.height) || targetHeight)
+  const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight)
+  const offsetX = (targetWidth - sourceWidth * scale) / 2
+  const offsetY = (targetHeight - sourceHeight * scale) / 2
+  const mapPoint = (point) => ({
+    x: offsetX + point.x * scale,
+    y: offsetY + point.y * scale,
+  })
 
   avatarPaths.value.forEach((path) => {
     if (!Array.isArray(path.points) || path.points.length < 1) return
@@ -390,8 +410,9 @@ const redrawAvatarCanvas = () => {
       path.points.forEach((point) => {
         if (!point.dots) return
         point.dots.forEach((dot) => {
+          const mappedDot = mapPoint(dot)
           avatarCtx.value.beginPath()
-          avatarCtx.value.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2)
+          avatarCtx.value.arc(mappedDot.x, mappedDot.y, Math.max(0.5, dot.r * scale), 0, Math.PI * 2)
           avatarCtx.value.fill()
         })
       })
@@ -400,17 +421,18 @@ const redrawAvatarCanvas = () => {
     }
 
     avatarCtx.value.strokeStyle = path.color
-    avatarCtx.value.lineWidth = brushType === 'marker' ? path.width * 2.5 : path.width
+    avatarCtx.value.lineWidth = (brushType === 'marker' ? path.width * 2.5 : path.width) * scale
     avatarCtx.value.lineCap = brushType === 'square' ? 'square' : 'round'
     avatarCtx.value.lineJoin = brushType === 'square' ? 'miter' : 'round'
     avatarCtx.value.globalAlpha = brushType === 'marker' ? 0.35 : 1
     avatarCtx.value.beginPath()
 
     path.points.forEach((point, index) => {
+      const mappedPoint = mapPoint(point)
       if (index === 0) {
-        avatarCtx.value.moveTo(point.x, point.y)
+        avatarCtx.value.moveTo(mappedPoint.x, mappedPoint.y)
       } else {
-        avatarCtx.value.lineTo(point.x, point.y)
+        avatarCtx.value.lineTo(mappedPoint.x, mappedPoint.y)
       }
     })
 
@@ -419,13 +441,18 @@ const redrawAvatarCanvas = () => {
   })
 }
 
-const onAvatarDrawingSave = ({ paths }) => {
+const onAvatarDrawingSave = ({ paths, width, height }) => {
   avatarPaths.value = Array.isArray(paths) ? JSON.parse(JSON.stringify(paths)) : []
+  avatarSourceSize.value = {
+    width: Number(width) || 420,
+    height: Number(height) || 420,
+  }
   redrawAvatarCanvas()
 }
 
 const clearAvatar = () => {
   avatarPaths.value = []
+  avatarSourceSize.value = { width: 420, height: 420 }
   redrawAvatarCanvas()
 }
 
@@ -441,7 +468,11 @@ const saveAvatar = async () => {
     name: profile.value.name,
     username: profile.value.username,
     email: profile.value.email,
-    avatar_drawing_data: JSON.stringify({ paths: avatarPaths.value }),
+    avatar_drawing_data: JSON.stringify({
+      paths: avatarPaths.value,
+      width: avatarSourceSize.value.width,
+      height: avatarSourceSize.value.height,
+    }),
     avatar_thumbnail: avatarCanvas.value.toDataURL('image/png', 0.75),
   }
 
