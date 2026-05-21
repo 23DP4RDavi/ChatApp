@@ -1734,6 +1734,7 @@ const createChannel = async () => {
     await loadChannels(selectedConversation.value.id)
   } catch (e) {
     console.error('Failed to create channel:', e)
+    showSnackbarMsg(e?.response?.data?.message || 'Failed to create channel', 'error')
   }
 }
 

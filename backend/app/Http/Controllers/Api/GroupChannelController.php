@@ -12,6 +12,16 @@ use Illuminate\Support\Facades\Schema;
 
 class GroupChannelController extends Controller
 {
+    private function hasOwnerColumn(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        $cached = Schema::hasColumn('conversations', 'owner_id');
+        return $cached;
+    }
+
     private function getGroupOrFail($groupId)
     {
         $conv = Conversation::findOrFail($groupId);
@@ -22,6 +32,19 @@ class GroupChannelController extends Controller
 
     private function assertOwner($conv)
     {
+        if (!$this->hasOwnerColumn()) {
+            return;
+        }
+
+        if (empty($conv->owner_id)) {
+            try {
+                $conv->owner_id = Auth::id();
+                $conv->save();
+            } catch (\Throwable $e) {
+                // Fall through to authorization check below.
+            }
+        }
+
         abort_unless((int) $conv->owner_id === (int) Auth::id(), 403, 'Only the server owner can do this');
     }
 
@@ -30,9 +53,11 @@ class GroupChannelController extends Controller
         $conv = $this->getGroupOrFail($groupId);
         $channels = $conv->channels()->orderBy('position')->get();
         $hasAllowedRoleIds = Schema::hasColumn('group_channels', 'allowed_role_ids');
+        $hasMemberRolesTable = Schema::hasTable('group_member_roles');
+        $isOwner = !$this->hasOwnerColumn() || (int) $conv->owner_id === (int) Auth::id();
 
         // Owners can see all channels; members only see channels they have role access to
-        if ((int) $conv->owner_id !== (int) Auth::id()) {
+        if (!$isOwner && $hasAllowedRoleIds && $hasMemberRolesTable) {
             $userRoleIds = GroupMemberRole::where('conversation_id', $groupId)
                 ->where('user_id', Auth::id())
                 ->pluck('role_id')
@@ -46,10 +71,6 @@ class GroupChannelController extends Controller
                 return count(array_intersect($userRoleIds, $allowed)) > 0;
             })->values();
 
-            // If role restrictions column is missing, all channels are visible.
-            if (!$hasAllowedRoleIds) {
-                $channels = $conv->channels()->orderBy('position')->get();
-            }
         }
 
         return response()->json(['channels' => $channels]);
@@ -197,7 +218,7 @@ class GroupChannelController extends Controller
                 'name' => $user->name,
                 'username' => $user->username,
                 'avatar_thumbnail' => $user->avatar_thumbnail,
-                'is_owner' => $conv->owner_id === $user->id,
+                'is_owner' => $this->hasOwnerColumn() ? ((int) $conv->owner_id === (int) $user->id) : false,
                 'roles' => $memberRoles->values(),
             ];
         });
