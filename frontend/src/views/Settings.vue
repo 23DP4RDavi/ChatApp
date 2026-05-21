@@ -866,11 +866,12 @@ watch(activeTab, async (value) => {
   position: relative;
   width: 220px;
   height: 220px;
-  border-radius: 50%;
+  border-radius: 18px;
   overflow: hidden;
   border: 2px solid rgba(124,58,237,0.35);
   background: #fff;
   flex-shrink: 0;
+  aspect-ratio: 1 / 1;
 }
 
 .avatar-empty-hint {
@@ -1079,6 +1080,7 @@ watch(activeTab, async (value) => {
   .avatar-preview-wrap {
     width: 180px;
     height: 180px;
+    border-radius: 16px;
   }
 
   .avatar-draw-actions {
