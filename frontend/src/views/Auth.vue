@@ -180,7 +180,9 @@ const handleGoogleCallback = async () => {
   const oauthError = typeof route.query.oauth_error === 'string' ? route.query.oauth_error : ''
 
   if (oauthError) {
-    error.value = `${t('auth.googleLoginFailed')} (${oauthError})`
+    error.value = t(`auth.oauthErrors.${oauthError}`) !== `auth.oauthErrors.${oauthError}`
+      ? t(`auth.oauthErrors.${oauthError}`)
+      : `${t('auth.googleLoginFailed')} (${oauthError})`
     await router.replace({ path: '/auth' })
     return
   }
@@ -197,6 +199,13 @@ const handleGoogleCallback = async () => {
     const response = await api.get('/user')
     localStorage.setItem('user', JSON.stringify(response.data.user))
     showSnackbar(t('auth.welcomeBackToast'), 'success')
+
+    const username = String(response.data?.user?.username || '').trim()
+    if (!username) {
+      await router.replace('/complete-profile')
+      return
+    }
+
     await router.replace('/')
   } catch (err) {
     localStorage.removeItem('token')

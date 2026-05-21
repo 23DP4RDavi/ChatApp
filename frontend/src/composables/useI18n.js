@@ -30,6 +30,7 @@ const dictionaries = {
       send: 'Sutit',
       post: 'Publicet',
       close: 'Aizvert',
+      refresh: 'Atjaunot',
       settings: 'Iestatijumi',
       chat: 'Tērzēšana',
       text: 'Teksts',
@@ -72,6 +73,16 @@ const dictionaries = {
       hasAccount: 'Jau ir konts?',
       continueWithGoogle: 'Turpinat ar Google',
       googleLoginFailed: 'Google pieslegsanas neizdevas. Megini velreiz.',
+      completeProfileTitle: 'Pabeidz profilu',
+      completeProfileSubtitle: 'Izvēlies lietotājvārdu, lai turpinātu.',
+      usernameRequirements: 'Lietotājvārdam jābūt 3-50 rakstzīmes (burti, cipari vai _).',
+      saveUsername: 'Saglabāt lietotājvārdu',
+      oauthErrors: {
+        google_login_failed: 'Google pieteikšanās neizdevās. Mēģini vēlreiz.',
+        google_email_missing: 'No Google konta netika saņemts e-pasts.',
+        google_callback_failed: 'Neizdevās pabeigt Google pieteikšanos.',
+        google_config_invalid: 'Google iestatījumi serverī nav korekti.'
+      },
       welcomeBackToast: 'Sveicinats atpakal!',
       accountCreatedToast: 'Konts veiksmigi izveidots!'
     },
@@ -597,6 +608,7 @@ const dictionaries = {
       send: 'Send',
       post: 'Post',
       close: 'Close',
+      refresh: 'Refresh',
       settings: 'Settings',
       chat: 'Chat',
       text: 'Text',
@@ -639,6 +651,16 @@ const dictionaries = {
       hasAccount: 'Already have an account?',
       continueWithGoogle: 'Continue with Google',
       googleLoginFailed: 'Google login failed. Please try again.',
+      completeProfileTitle: 'Complete your profile',
+      completeProfileSubtitle: 'Choose a username to continue.',
+      usernameRequirements: 'Username must be 3-50 characters (letters, numbers, or _).',
+      saveUsername: 'Save username',
+      oauthErrors: {
+        google_login_failed: 'Google sign-in failed. Please try again.',
+        google_email_missing: 'No email was returned from your Google account.',
+        google_callback_failed: 'Google sign-in callback failed.',
+        google_config_invalid: 'Google OAuth is not configured correctly on the server.'
+      },
       welcomeBackToast: 'Welcome back!',
       accountCreatedToast: 'Account created successfully!'
     },

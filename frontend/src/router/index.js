@@ -52,6 +52,12 @@ const routes = [
     component: () => import('@/views/Auth.vue')
   },
   {
+    path: '/complete-profile',
+    name: 'CompleteProfile',
+    component: () => import('@/views/CompleteProfile.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/invite/:token',
     name: 'Invite',
     component: () => import('@/views/Invite.vue'),
@@ -85,13 +91,24 @@ const router = createRouter({
 // Navigation guard to check authentication
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  let user = null
+
+  try {
+    user = JSON.parse(localStorage.getItem('user') || 'null')
+  } catch {
+    user = null
+  }
+
+  const needsUsername = !!token && (!user || !String(user.username || '').trim())
   
   if (to.meta.requiresAuth && !token) {
     // Redirect to auth if trying to access protected route without token
     next('/auth')
+  } else if (needsUsername && to.path !== '/complete-profile' && to.path !== '/auth') {
+    next('/complete-profile')
   } else if (to.path === '/auth' && token) {
     // Redirect to home if already logged in
-    next('/')
+    next(needsUsername ? '/complete-profile' : '/')
   } else {
     next()
   }
