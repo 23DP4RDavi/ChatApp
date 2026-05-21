@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -39,29 +40,53 @@ class AuthController extends Controller
             $googleId = (string) $googleUser->getId();
             $displayName = trim((string) ($googleUser->getName() ?: $googleUser->getNickname() ?: Str::before($email, '@')));
 
-            $user = User::where('google_id', $googleId)
-                ->orWhere('email', $email)
-                ->first();
+            $hasGoogleId = Schema::hasColumn('users', 'google_id');
+            $hasAuthProvider = Schema::hasColumn('users', 'auth_provider');
+            $hasUsername = Schema::hasColumn('users', 'username');
+
+            $query = User::query();
+
+            if ($hasGoogleId) {
+                $query->where('google_id', $googleId)
+                    ->orWhere('email', $email);
+            } else {
+                $query->where('email', $email);
+            }
+
+            $user = $query->first();
 
             if (!$user) {
-                $user = User::create([
+                $payload = [
                     'name' => $displayName !== '' ? $displayName : 'Google User',
-                    'username' => $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@')),
                     'email' => $email,
                     'password' => Hash::make(Str::random(40)),
-                    'google_id' => $googleId,
-                    'auth_provider' => 'google',
-                ]);
+                ];
+
+                if ($hasUsername) {
+                    $payload['username'] = $this->generateUniqueUsername(
+                        $displayName !== '' ? $displayName : Str::before($email, '@')
+                    );
+                }
+
+                if ($hasGoogleId) {
+                    $payload['google_id'] = $googleId;
+                }
+
+                if ($hasAuthProvider) {
+                    $payload['auth_provider'] = 'google';
+                }
+
+                $user = User::create($payload);
             } else {
-                if (!$user->google_id) {
+                if ($hasGoogleId && !$user->google_id) {
                     $user->google_id = $googleId;
                 }
 
-                if (!$user->auth_provider) {
+                if ($hasAuthProvider && !$user->auth_provider) {
                     $user->auth_provider = 'google';
                 }
 
-                if (empty($user->username)) {
+                if ($hasUsername && empty($user->username)) {
                     $user->username = $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@'));
                 }
 
