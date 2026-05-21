@@ -748,9 +748,6 @@
           </div>
           <div v-else-if="inviteUrl" class="invite-link-row">
             <code class="invite-link-code">{{ inviteUrl }}</code>
-            <v-btn icon size="small" variant="tonal" color="primary" @click="copyInviteLink" title="Copy">
-              <v-icon size="16">mdi-content-copy</v-icon>
-            </v-btn>
           </div>
           <div v-else class="channel-empty">{{ t('messagesPage.couldNotGenerate') }}</div>
         </div>
