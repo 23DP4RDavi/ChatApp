@@ -906,7 +906,6 @@ export default {
   display: block;
   border-radius: 50%;
 }
-}
 
 .cb-bubble-group {
   display: flex; flex-direction: column; gap: 2px;
