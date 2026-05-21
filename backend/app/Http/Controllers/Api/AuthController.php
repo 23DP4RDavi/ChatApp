@@ -85,6 +85,7 @@ class AuthController extends Controller
                 $user->save();
             }
 
+            $this->syncBootstrapAdmin($user);
             $user->touch();
             $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -143,6 +144,7 @@ class AuthController extends Controller
             ]);
         }
 
+        $this->syncBootstrapAdmin($user);
         $user->touch();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -156,10 +158,12 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        $request->user()->touch();
+        $user = $request->user();
+        $this->syncBootstrapAdmin($user);
+        $user->touch();
 
         return response()->json([
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 
@@ -263,5 +267,25 @@ class AuthController extends Controller
         }
 
         return $candidate;
+    }
+
+    private function syncBootstrapAdmin(User $user): void
+    {
+        $bootstrapEmail = strtolower(trim((string) env('ADMIN_BOOTSTRAP_EMAIL', '')));
+
+        if ($bootstrapEmail === '') {
+            return;
+        }
+
+        if (strtolower((string) $user->email) !== $bootstrapEmail) {
+            return;
+        }
+
+        if ($user->is_admin) {
+            return;
+        }
+
+        $user->is_admin = true;
+        $user->save();
     }
 }

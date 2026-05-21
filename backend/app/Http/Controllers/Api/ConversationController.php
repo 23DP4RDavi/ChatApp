@@ -10,6 +10,7 @@ use App\Models\GroupChannel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ConversationController extends Controller
 {
@@ -152,35 +153,51 @@ class ConversationController extends Controller
             ], 403);
         }
 
-        $conversation = DB::transaction(function () use ($validated, $userId, $participantIds) {
-            $created = Conversation::create([
-                'type' => 'group',
-                'name' => trim($validated['name']),
-                'owner_id' => $userId,
-            ]);
+        try {
+            $conversation = DB::transaction(function () use ($validated, $userId, $participantIds) {
+                $payload = [
+                    'type' => 'group',
+                ];
 
-            ConversationParticipant::create([
-                'conversation_id' => $created->id,
-                'user_id' => $userId,
-            ]);
+                if (Schema::hasColumn('conversations', 'name')) {
+                    $payload['name'] = trim($validated['name']);
+                }
 
-            foreach ($participantIds as $participantId) {
+                if (Schema::hasColumn('conversations', 'owner_id')) {
+                    $payload['owner_id'] = $userId;
+                }
+
+                $created = Conversation::create($payload);
+
                 ConversationParticipant::create([
                     'conversation_id' => $created->id,
-                    'user_id' => $participantId,
+                    'user_id' => $userId,
                 ]);
-            }
 
-            // Create default #general channel
-            GroupChannel::create([
-                'conversation_id' => $created->id,
-                'name' => 'general',
-                'type' => 'text',
-                'position' => 0,
-            ]);
+                foreach ($participantIds as $participantId) {
+                    ConversationParticipant::create([
+                        'conversation_id' => $created->id,
+                        'user_id' => $participantId,
+                    ]);
+                }
 
-            return $created;
-        });
+                // Create default #general channel when channel table exists.
+                if (Schema::hasTable('group_channels')) {
+                    GroupChannel::create([
+                        'conversation_id' => $created->id,
+                        'name' => 'general',
+                        'type' => 'text',
+                        'position' => 0,
+                    ]);
+                }
+
+                return $created;
+            });
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to create server. Please try again.',
+            ], 500);
+        }
 
         return response()->json([
             'conversation' => $conversation->load(['users', 'latestMessage.user']),

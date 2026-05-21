@@ -1691,6 +1691,8 @@ const createGroupConversation = async () => {
     resetGroupDialog()
   } catch (error) {
     console.error('Failed to create group:', error)
+    const message = error?.response?.data?.message || 'Failed to create server'
+    showSnackbarMsg(message, 'error')
   } finally {
     isCreatingGroup.value = false
   }
