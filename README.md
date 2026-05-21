@@ -1,257 +1,159 @@
-# DoodleVerse - Mākslas un Čata Platforma
+# DoodleVerse — Mākslas un Tērzēšanas Platforma
 
-Pilnvērtīga sociālā platforma ar reāllaika čatu, digitālo mākslas galeriju un balsošanas sistēmu. Izveidota ar Vue 3 un Laravel.
+Pilnvērtīga sociālā platforma ar reāllaika tērzēšanu, digitālo mākslas galeriju un balsošanas sistēmu. Izveidota ar Vue 3 un Laravel 11.
+
+---
 
 ## Funkcionalitāte
 
-- **Digitālā Zīmēšana** - Izveidojiet mākslas darbus ar iekļauto zīmēšanas rīku
-- **Mākslas Galerija** - Pārlūkojiet, meklējiet un kārtojiet mākslas darbus
-- **Balsošanas Sistēma** - Novērtējiet un atbalstiet jūsu mīļākos mākslas darbus
-- **Reāllaika Čats** - Sazināties ar kopienu tūlītējos ziņojumos
-- **Autentifikācija** - Drošs lietotāju reģistrēšanās un pieteikšanās process
-- **Statistika** - Reāllaika statistika par mākslas darbiem, balsojumiem un lietotājiem
+- Digitālā zīmēšana ar dažādiem instrumentiem un formu atbalstu
+- Mākslas galerija ar meklēšanu, filtrēšanu un arhīvu
+- Nedēļas tēmu sistēma — katru nedēļu jauna zīmēšanas tēma
+- Balsošanas sistēma zīmējumu novērtēšanai
+- Reāllaika tērzēšana ar privātām un grupas sarunām
+- Draugi — pieprasījumu sūtīšana, apstiprināšana, draugu saraksts
+- Grupas kanāli ar lomām un piekļuves tiesībām
+- Lietotāja profils ar avatāru
+- Google OAuth pieteikšanās
+- Valodas pārslēgšana — latviešu un angļu
+- Administratora panelis lietotāju un satura pārvaldībai
 
-## Tehnoloģiju Steks
+---
+
+## Tehnoloģiju steks
 
 ### Frontend
-- **Vue 3** - Progresīvais JavaScript ietvars
-- **Vuetify 3** - Material Design komponentu bibliotēka
-- **Vite** - Ātrs izstrādes serveris un būvēšanas rīks
-- **Axios** - HTTP klients API pieprasījumiem
+- Vue 3 ar Composition API
+- Vuetify 3 — Material Design komponentu bibliotēka
+- Vite — izstrādes serveris un būvēšanas rīks
+- Axios — HTTP klients API pieprasījumiem
+- Laravel Echo un Pusher JS — reāllaika WebSocket savienojums
 
 ### Backend
-- **Laravel 10** - PHP tīmekļa aplikāciju ietvars
-- **Laravel Sanctum** - API autentifikācija ar tokenizāciju
-- **SQLite** - Viegla datu bāze izstrādei
-- **Laravel Herd** - Vietējās izstrādes vide
+- Laravel 11 — PHP tīmekļa lietojumprogrammu ietvars
+- Laravel Sanctum — API autentifikācija ar tokenizāciju
+- Laravel Reverb — WebSocket serveris reāllaika apraides nodrošinājumam
+- MySQL — relāciju datubāze
 
-## Priekšnosacījumi
+---
 
-- **Laravel Herd** - Ietver PHP 8.4+, Composer, un Nginx
-- **Node.js** - Versija 16+ ar npm
-- **Pārlūkprogramma** - Moderns tīmekļa pārlūks
-
-## Uzstādīšana
-
-### 1. Klonēt Repozitoriju
-
-```bash
-cd C:\Users\sarmi\Desktop
-# Projekts jau atrodas ChatApp mapē
-```
-
-### 2. Backend Uzstādīšana
-
-```powershell
-# Pāriet uz backend mapi
-cd ChatApp_backend_fresh
-
-# Uzstādīt atkarības
-herd composer install
-
-# Kopēt vides konfigurāciju
-cp .env.example .env
-
-# Ģenerēt aplikācijas atslēgu
-php artisan key:generate
-
-# Izveidot SQLite datu bāzi
-New-Item -ItemType File -Path database\database.sqlite -Force
-
-# Palaist migrācijas
-php artisan migrate
-
-# Saistīt ar Herd (lai būtu pieejams kā chatapp-api.test)
-herd link chatapp-api
-```
-
-### 3. Frontend Uzstādīšana
-
-```powershell
-# Pāriet uz frontend mapi
-cd ..\frontend
-
-# Uzstādīt atkarības
-npm install
-
-# Pārbaudīt .env failu (jābūt VITE_API_URL=http://chatapp-api.test/api)
-```
-
-## Palaišana
-
-### Startēt Backend
-
-Backend automātiski darbojas caur Laravel Herd:
-- **URL**: http://chatapp-api.test
-- **API**: http://chatapp-api.test/api
-
-Nav nepieciešams palaist `php artisan serve` - Herd automātiski apkalpo projektu!
-
-### Startēt Frontend
-
-```powershell
-cd frontend
-npm run dev
-```
-
-Frontend būs pieejams uz: http://localhost:3000
-
-## Projekta Struktūra
+## Projekta struktūra
 
 ```
 ChatApp/
-├── ChatApp_backend_fresh/          # Laravel backend
-│   ├── app/
-│   │   ├── Http/Controllers/Api/   # API kontrolieri
-│   │   │   ├── AuthController.php  # Autentifikācija
-│   │   │   ├── DrawingController.php # Zīmējumu CRUD
-│   │   │   └── MessageController.php # Čata ziņojumi
-│   │   └── Models/                 # Eloquent modeļi
-│   │       ├── User.php
-│   │       ├── Drawing.php
-│   │       ├── Vote.php
-│   │       └── Message.php
-│   ├── database/
-│   │   ├── migrations/             # Datu bāzes migrācijas
-│   │   └── database.sqlite         # SQLite datu bāze
-│   └── routes/
-│       └── api.php                 # API maršruti
-│
-└── frontend/                       # Vue 3 frontend
-    ├── src/
-    │   ├── components/             # Vue komponenti
-    │   │   ├── AppHeader/
-    │   │   ├── AppFooter/
-    │   │   ├── ChatBox/
-    │   │   ├── DrawingCard/
-    │   │   ├── GalleryGrid/
-    │   │   └── EmptyState/
-    │   ├── views/                  # Lappuses
-    │   │   ├── Home.vue           # Sākumlapa
-    │   │   ├── Gallery.vue        # Mākslas galerija
-    │   │   ├── Draw.vue           # Zīmēšanas rīks
-    │   │   └── Chat.vue           # Čata istaba
-    │   ├── router/                # Vue Router
-    │   ├── services/              # API servisi
-    │   └── styles/                # CSS stili
-    └── package.json
+  backend/      Laravel API serveris
+  frontend/     Vue 3 lietotāja saskarne
 ```
 
-## API Galapunkti
+Sīkāka informācija par katru daļu:
+- [frontend/README.md](frontend/README.md) — detalizēts frontend failu apraksts
+- [backend/README.md](backend/README.md) — detalizēts backend failu apraksts
 
-### Autentifikācija
-- `POST /api/register` - Reģistrēt jaunu lietotāju
-- `POST /api/login` - Pieteikties
-- `POST /api/logout` - Izrakstīties
-- `GET /api/user` - Iegūt autentificēto lietotāju
+---
 
-### Zīmējumi
-- `GET /api/drawings` - Iegūt visus zīmējumus (paginēts)
-- `POST /api/drawings` - Izveidot jaunu zīmējumu
-- `GET /api/drawings/{id}` - Iegūt konkrētu zīmējumu
-- `DELETE /api/drawings/{id}` - Dzēst zīmējumu
-- `GET /api/drawings/{id}/check-vote` - Pārbaudīt vai lietotājs ir balsojis
-- `POST /api/drawings/{id}/vote` - Balsot par zīmējumu
-- `DELETE /api/drawings/{id}/unvote` - Atcelt balsi
+## Uzstādīšana
 
-### Ziņojumi
-- `GET /api/messages` - Iegūt visas čata ziņas
-- `POST /api/messages` - Nosūtīt jaunu ziņu
-- `GET /api/messages/new` - Iegūt jaunās ziņas (polling)
-- `DELETE /api/messages/{id}` - Dzēst ziņu
+### Priekšnosacījumi
 
-### Citi
-- `GET /api/health` - Veselības pārbaude
-- `GET /api/stats` - Globālā statistika
-
-## Funkcijas Lietošana
-
-### 1. Reģistrācija un Pieteikšanās
-- Apmeklējiet http://localhost:3000
-- Noklikšķiniet uz "Get Started" vai "Join Island"
-- Reģistrējieties ar lietotājvārdu un paroli
-- Pēc reģistrācijas automātiski tiks pieteikts
-
-### 2. Zīmēšana
-- Doties uz Draw lapu navigācijas izvēlnē
-- Izmantojiet zīmēšanas rīkus kreisajā pusē
-- Izvēlieties krāsas, otas izmēru un darbarīkus
-- Saglabājiet mākslas darbu ar nosaukumu
-
-### 3. Galerija
-- Pārlūkojiet visus mākslas darbus Gallery lapā
-- Izmantojiet meklēšanas joslu, lai filtrētu pēc nosaukuma vai mākslinieka
-- Kārtojiet pēc "Newest" vai "Most Loved"
-- Noklikšķiniet uz sirds ikonas, lai balsotu
-
-### 4. Čats
-- Apmeklējiet Chat lapu
-- Rakstiet ziņas čata lodziņā
-- Ziņas atjauninās automātiski katras 3 sekundes
-
-## Atkļūdošana
-
-### Laravel Debugbar
-
-Projekts ir aprīkots ar Laravel Debugbar izstrādei:
-- Apmeklējiet jebkuru API galapunktu pārlūkprogrammā
-- Debugbar parādīs SQL vaicājumus, veiktspēju, un pieprasījuma informāciju
-- Pieejams tikai kad `APP_DEBUG=true` .env failā
-
-### Kļūdu Žurnāli
-
-Backend žurnāli:
-```powershell
-# Skatīt Laravel žurnālus
-cd ChatApp_backend_fresh
-cat storage\logs\laravel.log
-```
-
-## Konfigurācija
-
-### Backend (.env)
-```env
-APP_DEBUG=true
-DB_CONNECTION=sqlite
-DB_DATABASE=C:\Users\sarmi\Desktop\ChatApp_backend_fresh\database\database.sqlite
-```
-
-### Frontend (.env)
-```env
-VITE_API_URL=http://chatapp-api.test/api
-```
-
-## Būvēšana Produkcijai
-
-### Frontend
-```powershell
-cd frontend
-npm run build
-```
-
-Būvētie faili būs `dist/` mapē.
+- PHP 8.2+ ar Composer
+- Node.js 18+ ar npm
+- MySQL datubāze
 
 ### Backend
-```powershell
-cd ChatApp_backend_fresh
-composer install --optimize-autoloader --no-dev
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+
+```bash
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-## Atbalsts
+Konfigurējiet `.env` failu ar MySQL savienojuma datiem, pēc tam:
 
-Ja rodas problēmas:
-1. Pārbaudiet vai Herd darbojas: `herd list`
-2. Pārbaudiet vai backend ir saistīts: `herd links`
-3. Pārbaudiet vai datu bāze eksistē: `ls database\database.sqlite`
-4. Pārbaudiet žurnālus: `storage\logs\laravel.log`
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan reverb:start
+php artisan queue:work
+php artisan serve
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Izveidojiet `.env` failu ar sekojošu saturu:
+
+```env
+VITE_API_URL=http://localhost:8000/api
+VITE_REVERB_APP_KEY=your_reverb_key
+VITE_REVERB_HOST=localhost
+VITE_REVERB_PORT=8080
+VITE_REVERB_SCHEME=http
+```
+
+Pēc tam palaidiet:
+
+```bash
+npm run dev
+```
+
+Frontend būs pieejams uz `http://localhost:5173`.
+
+---
+
+## API galapunkti
+
+### Autentifikācija
+- `POST /api/register` — reģistrācija
+- `POST /api/login` — pieteikšanās
+- `POST /api/logout` — izrakstīšanās
+- `GET /api/user` — pašreizējais lietotājs
+
+### Zīmējumi
+- `GET /api/drawings` — iegūt zīmējumu sarakstu
+- `POST /api/drawings` — saglabāt jaunu zīmējumu
+- `DELETE /api/drawings/{id}` — dzēst zīmējumu
+- `POST /api/drawings/{id}/vote` — nobalsot
+- `DELETE /api/drawings/{id}/unvote` — atsaukt balsi
+- `GET /api/drawings/{id}/comments` — iegūt komentārus
+- `POST /api/drawings/{id}/comments` — pievienot komentāru
+
+### Sarunas un ziņojumi
+- `GET /api/conversations` — iegūt sarunu sarakstu
+- `POST /api/conversations` — izveidot sarunu
+- `GET /api/conversations/{id}/messages` — iegūt ziņojumus
+- `POST /api/conversations/{id}/messages` — nosūtīt ziņojumu
+
+### Draugi
+- `GET /api/friends` — draugu saraksts
+- `POST /api/friends/request/{id}` — nosūtīt pieprasījumu
+- `POST /api/friends/accept/{id}` — apstiprināt pieprasījumu
+- `DELETE /api/friends/{id}` — noņemt draugu
+
+### Nedēļas tēmas
+- `GET /api/weekly-themes/current` — pašreizējā tēma
+- `GET /api/weekly-themes/archive` — tēmu arhīvs
+
+### Administrācija
+- `GET /api/admin/users` — lietotāju saraksts
+- `GET /api/admin/messages` — ziņojumu saraksts
+- `GET /api/admin/drawings` — zīmējumu saraksts
+- `GET /api/admin/conversations` — sarunu saraksts
+
+---
+
+## Kļūdu žurnāli
+
+```bash
+cat backend/storage/logs/laravel.log
+```
+
+---
 
 ## Licenze
 
-Šis projekts ir privāts mācību projekts.
-
-## Autors
-
-Izveidots 2026. gadā kā pilnvērtīga Vue 3 + Laravel 10 aplikācija.
+Privāts mācību projekts, izveidots 2026. gadā.

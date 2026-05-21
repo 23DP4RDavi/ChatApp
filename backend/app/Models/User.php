@@ -21,6 +21,11 @@ class User extends Authenticatable
         'email',
         'password',
         'username',
+        'google_id',
+        'auth_provider',
+        'is_admin',
+        'avatar_drawing_data',
+        'avatar_thumbnail',
     ];
 
     /**
@@ -41,61 +46,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_admin' => 'boolean',
     ];
 
-    /**
-     * Get the drawings created by this user.
-     */
     public function drawings()
     {
         return $this->hasMany(Drawing::class);
     }
 
-    /**
-     * Get the messages sent by this user.
-     */
     public function messages()
     {
         return $this->hasMany(Message::class);
     }
 
-    /**
-     * Get the votes cast by this user.
-     */
-    public function votes()
-    {
-        return $this->hasMany(Vote::class);
-    }
-
-    /**
-     * Get friendships where this user is the requester.
-     */
     public function friendshipsRequested()
     {
         return $this->hasMany(Friendship::class, 'user_id');
     }
 
-    /**
-     * Get friendships where this user is the receiver.
-     */
     public function friendshipsReceived()
     {
         return $this->hasMany(Friendship::class, 'friend_id');
     }
 
-    /**
-     * Get conversations this user is participating in.
-     */
     public function conversations()
     {
         return $this->belongsToMany(Conversation::class, 'conversation_participants');
     }
 
-    /**
-     * Update the user's last activity timestamp.
-     */
-    public function updateLastActivity()
-    {
-        $this->touch();
-    }
 }
