@@ -6,12 +6,14 @@ PORT="${PORT:-8080}"
 echo "==> Clearing bootstrap cache..."
 rm -f /var/www/bootstrap/cache/*.php
 
-# Some Railway services end up with a domain target port that differs from $PORT.
-# Serve both ports so proxy routing succeeds regardless of current target setting.
-if [ "${PORT}" != "8000" ]; then
-	echo "==> Starting fallback PHP server on port 8000..."
-	php -S 0.0.0.0:8000 -t /var/www/public /var/www/public/index.php >/tmp/php-8000.log 2>&1 &
-fi
+# Start fallback listeners on common Railway target ports in case the domain target
+# is not aligned with the runtime PORT value.
+for p in 8000 8080 9000; do
+	if [ "$p" != "$PORT" ]; then
+		echo "==> Starting fallback PHP server on port $p..."
+		php -S 0.0.0.0:$p -t /var/www/public /var/www/public/index.php >/tmp/php-$p.log 2>&1 &
+	fi
+done
 
-echo "==> Starting PHP built-in server on port ${PORT}..."
+echo "==> Starting primary PHP server on port ${PORT}..."
 exec php -S 0.0.0.0:${PORT} -t /var/www/public /var/www/public/index.php
