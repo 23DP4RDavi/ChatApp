@@ -15,7 +15,7 @@
       <div class="profile-hero">
         <div class="profile-avatar-wrap">
           <v-avatar size="96" class="profile-avatar">
-            <v-img v-if="profile.avatar_thumbnail" :src="profile.avatar_thumbnail" cover />
+            <v-img v-if="profile.avatar_thumbnail" :src="profile.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(profile.avatar_thumbnail, getUserDisplayName(profile))" />
             <span v-else class="profile-initials">{{ getUserInitial(profile) }}</span>
           </v-avatar>
         </div>
@@ -69,6 +69,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { openAvatarZoom } from '@/utils/avatarZoom'
 import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 const { t } = useI18n()

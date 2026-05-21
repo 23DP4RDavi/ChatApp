@@ -19,3 +19,9 @@ body { overflow-x: hidden; -moz-osx-font-smoothing: grayscale; }
 .v-avatar .v-responsive__content {
   background-color: #ffffff;
 }
+
+.zoomable-avatar,
+.zoomable-avatar img,
+img.zoomable-avatar {
+  cursor: zoom-in;
+}

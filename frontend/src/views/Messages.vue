@@ -185,7 +185,7 @@
               @click="selectConversation(conv)">
               <div class="conv-avatar-wrap">
                 <v-avatar size="34" color="primary" class="conv-avatar">
-                  <img v-if="getConversationAvatar(conv)" :src="getConversationAvatar(conv)" alt="" />
+                  <img v-if="getConversationAvatar(conv)" :src="getConversationAvatar(conv)" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(getConversationAvatar(conv), getConversationTitle(conv))" />
                   <span v-else style="font-size:0.78rem;font-weight:700">{{ getConversationInitial(conv) }}</span>
                 </v-avatar>
                 <span v-if="isUserOnline(conv)" class="online-dot"></span>
@@ -218,7 +218,7 @@
             </template>
             <template v-else>
               <v-avatar size="36" color="primary">
-                <img v-if="getConversationAvatar(selectedConversation)" :src="getConversationAvatar(selectedConversation)" alt="" />
+                <img v-if="getConversationAvatar(selectedConversation)" :src="getConversationAvatar(selectedConversation)" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(getConversationAvatar(selectedConversation), getConversationTitle(selectedConversation))" />
                 <span v-else style="font-size:0.8rem;font-weight:700">{{ getConversationInitial(selectedConversation) }}</span>
               </v-avatar>
               <span v-if="isUserOnline(selectedConversation)" class="online-dot online-dot--head"></span>
@@ -271,7 +271,7 @@
               <div v-if="pinnedMessages.length === 0" class="pinned-empty">{{ t('messagesPage.noPinnedMessages') }}</div>
               <div v-for="pm in pinnedMessages" :key="pm.id" class="pinned-item" @click="scrollToMsg(pm.id); showPinnedPanel = false">
                 <v-avatar size="24" color="secondary" class="mr-2 flex-shrink-0">
-                  <img v-if="pm.user?.avatar_thumbnail" :src="pm.user.avatar_thumbnail" alt="" />
+                  <img v-if="pm.user?.avatar_thumbnail" :src="pm.user.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(pm.user.avatar_thumbnail, getUserDisplayName(pm.user))" />
                   <span v-else style="font-size:0.6rem;font-weight:700">{{ getUserInitial(pm.user) }}</span>
                 </v-avatar>
                 <div class="pinned-item-body">
@@ -300,7 +300,7 @@
               <!-- Avatar column: full avatar for first in group, hover-timestamp for grouped -->
               <div class="msg-avatar-col">
                 <v-avatar v-if="!message._grouped" size="36" class="msg-avatar-img" color="secondary">
-                  <img v-if="message.user?.avatar_thumbnail" :src="message.user.avatar_thumbnail" alt="" />
+                  <img v-if="message.user?.avatar_thumbnail" :src="message.user.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(message.user.avatar_thumbnail, getUserDisplayName(message.user))" />
                   <span v-else style="font-size:0.72rem;font-weight:700">{{ getUserInitial(message.user) }}</span>
                 </v-avatar>
                 <span v-else class="msg-side-time">{{ formatTime(message.created_at) }}</span>
@@ -310,7 +310,7 @@
               <div class="msg-body">
                 <div v-if="message.reply_to" class="msg-reply-ref" @click.stop="scrollToMsg(message.reply_to.id)">
                   <v-avatar size="14" color="secondary" class="mr-1 flex-shrink-0">
-                    <img v-if="message.reply_to.user?.avatar_thumbnail" :src="message.reply_to.user.avatar_thumbnail" alt="" />
+                    <img v-if="message.reply_to.user?.avatar_thumbnail" :src="message.reply_to.user.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(message.reply_to.user.avatar_thumbnail, getUserDisplayName(message.reply_to.user))" />
                     <span v-else style="font-size:0.5rem">{{ getUserInitial(message.reply_to.user) }}</span>
                   </v-avatar>
                   <span class="msg-reply-ref-author">{{ getUserDisplayName(message.reply_to.user) }}</span>
@@ -568,7 +568,7 @@
                 <div v-for="m in onlineMembers" :key="m.id" class="member-row">
                   <div class="member-avatar-wrap">
                     <v-avatar size="28" color="secondary">
-                      <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" />
+                      <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(m.avatar_thumbnail, getUserDisplayName(m))" />
                       <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(m) }}</span>
                     </v-avatar>
                     <span class="member-online-dot"></span>
@@ -587,7 +587,7 @@
                 <div v-for="m in offlineMembers" :key="m.id" class="member-row member-row--offline">
                   <div class="member-avatar-wrap">
                     <v-avatar size="28" color="secondary">
-                      <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" />
+                      <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(m.avatar_thumbnail, getUserDisplayName(m))" />
                       <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(m) }}</span>
                     </v-avatar>
                   </div>
@@ -925,7 +925,7 @@
             </div>
             <div v-for="member in serverMembers" :key="member.id" class="settings-row">
               <v-avatar size="28" color="secondary" class="mr-2">
-                <img v-if="member.avatar_thumbnail" :src="member.avatar_thumbnail" alt="" />
+                <img v-if="member.avatar_thumbnail" :src="member.avatar_thumbnail" alt="" class="zoomable-avatar" @click.stop="openAvatarZoom(member.avatar_thumbnail, getUserDisplayName(member))" />
                 <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(member) }}</span>
               </v-avatar>
               <div class="flex-grow-1">
@@ -1072,6 +1072,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { openAvatarZoom } from '@/utils/avatarZoom'
 import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 import { renderPaths } from '@/utils/renderPaths'
 import Echo from 'laravel-echo'

@@ -296,7 +296,7 @@
       <div class="detail-header">
         <div class="detail-author-row">
           <v-avatar size="36" class="mr-3 flex-shrink-0">
-            <v-img v-if="selectedDrawing.user?.avatar_thumbnail" :src="selectedDrawing.user.avatar_thumbnail" cover />
+            <v-img v-if="selectedDrawing.user?.avatar_thumbnail" :src="selectedDrawing.user.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(selectedDrawing.user.avatar_thumbnail, selectedDrawing.user?.username || selectedDrawing.user?.name)" />
             <v-icon v-else size="32">mdi-account-circle</v-icon>
           </v-avatar>
           <div>
@@ -375,7 +375,7 @@
         <div v-for="c in comments" :key="c.id" class="comment-item">
           <div class="comment-row">
             <v-avatar size="30" class="comment-avatar flex-shrink-0">
-              <v-img v-if="c.user?.avatar_thumbnail" :src="c.user.avatar_thumbnail" cover />
+              <v-img v-if="c.user?.avatar_thumbnail" :src="c.user.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(c.user.avatar_thumbnail, c.user?.username || c.user?.name || c.user_name)" />
               <span v-else class="comment-avatar-letter">{{ (c.user?.username || c.user?.name || c.user_name || '?')[0].toUpperCase() }}</span>
             </v-avatar>
             <div class="comment-body">
@@ -445,6 +445,7 @@ import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { openAvatarZoom } from '@/utils/avatarZoom'
 
 const router = useRouter()
 const { t, language } = useI18n()

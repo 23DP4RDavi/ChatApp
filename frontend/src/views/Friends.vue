@@ -29,7 +29,7 @@
       <div v-if="searchResults.length > 0" class="result-list">
         <div v-for="user in searchResults" :key="user.id" class="user-row">
           <v-avatar size="36" color="primary" class="mr-3">
-              <v-img v-if="user.avatar_thumbnail" :src="user.avatar_thumbnail" cover />
+              <v-img v-if="user.avatar_thumbnail" :src="user.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(user.avatar_thumbnail, getUserDisplayName(user))" />
               <span v-else class="text-caption font-weight-bold">{{ getUserInitial(user) }}</span>
           </v-avatar>
           <div class="user-info">
@@ -66,7 +66,7 @@
           <div v-if="friends.length > 0" class="friends-list">
             <div v-for="friend in friends" :key="friend.id" class="user-row">
               <v-avatar size="36" color="secondary" class="mr-3">
-                <v-img v-if="friend.avatar_thumbnail" :src="friend.avatar_thumbnail" cover />
+                <v-img v-if="friend.avatar_thumbnail" :src="friend.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(friend.avatar_thumbnail, getUserDisplayName(friend))" />
                 <span v-else class="text-caption font-weight-bold">{{ getUserInitial(friend) }}</span>
               </v-avatar>
               <div class="user-info">
@@ -99,7 +99,7 @@
             <p class="section-label">{{ t('friendsPage.receivedRequests') }}</p>
             <div v-for="req in pendingReceived" :key="req.id" class="user-row">
               <v-avatar size="36" color="warning" class="mr-3">
-                <v-img v-if="req.user?.avatar_thumbnail" :src="req.user.avatar_thumbnail" cover />
+                <v-img v-if="req.user?.avatar_thumbnail" :src="req.user.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(req.user.avatar_thumbnail, getUserDisplayName(req.user))" />
                 <span v-else class="text-caption font-weight-bold">{{ getUserInitial(req.user) }}</span>
               </v-avatar>
               <div class="user-info">
@@ -121,7 +121,7 @@
             <p class="section-label">{{ t('friendsPage.sentRequests') }}</p>
             <div v-for="req in pendingSent" :key="req.id" class="user-row">
               <v-avatar size="36" color="info" class="mr-3">
-                <v-img v-if="req.friend?.avatar_thumbnail" :src="req.friend.avatar_thumbnail" cover />
+                <v-img v-if="req.friend?.avatar_thumbnail" :src="req.friend.avatar_thumbnail" cover class="zoomable-avatar" @click.stop="openAvatarZoom(req.friend.avatar_thumbnail, getUserDisplayName(req.friend))" />
                 <span v-else class="text-caption font-weight-bold">{{ getUserInitial(req.friend) }}</span>
               </v-avatar>
               <div class="user-info">
@@ -152,6 +152,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { openAvatarZoom } from '@/utils/avatarZoom'
 import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 const router = useRouter()

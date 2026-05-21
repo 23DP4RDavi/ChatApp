@@ -9,6 +9,7 @@
       </router-view>
     </v-main>
     <AppFooter v-if="!['Draw', 'Messages', 'Chat'].includes(route.name)" />
+    <AvatarZoomDialog />
   </v-app>
 </template>
 
@@ -16,6 +17,7 @@
 import { useRoute } from 'vue-router'
 import AppHeader from '@/components/AppHeader'
 import AppFooter from '@/components/AppFooter'
+import AvatarZoomDialog from '@/components/AvatarZoomDialog.vue'
 
 const route = useRoute()
 </script>

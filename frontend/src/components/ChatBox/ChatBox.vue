@@ -47,6 +47,7 @@
                 :src="msg.user.avatar_thumbnail"
                 :alt="getUserDisplayName(msg.user)"
                 class="cb-avatar-img"
+                @click.stop="openAvatarZoom(msg.user.avatar_thumbnail, getUserDisplayName(msg.user))"
               />
               <span v-else>{{ getUserInitial(msg.user) }}</span>
             </div>
@@ -231,6 +232,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { openAvatarZoom } from '@/utils/avatarZoom'
 import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 export default {
