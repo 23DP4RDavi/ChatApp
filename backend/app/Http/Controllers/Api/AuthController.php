@@ -281,11 +281,19 @@ class AuthController extends Controller
             return;
         }
 
+        if (!Schema::hasTable('users') || !Schema::hasColumn('users', 'is_admin')) {
+            return;
+        }
+
         if ($user->is_admin) {
             return;
         }
 
-        $user->is_admin = true;
-        $user->save();
+        try {
+            $user->is_admin = true;
+            $user->save();
+        } catch (\Throwable $e) {
+            // Never block auth/user endpoints because of bootstrap-admin sync.
+        }
     }
 }
