@@ -32,6 +32,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Allow composer to run as root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 WORKDIR /var/www
 
 # Cache composer dependencies separately for faster rebuilds
@@ -41,8 +44,8 @@ RUN composer install --no-scripts --no-autoloader --no-dev --no-interaction --pr
 # Copy application source
 COPY . .
 
-# Finalise autoloader
-RUN composer dump-autoload --optimize --no-dev
+# Finalise autoloader (skip post-autoload scripts — package:discover runs at container startup)
+RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 # Permissions
 RUN mkdir -p /var/www/storage/logs /var/www/storage/framework/cache /var/www/storage/framework/sessions /var/www/storage/framework/views \

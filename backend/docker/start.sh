@@ -5,6 +5,9 @@ echo "==> Generating nginx config with PORT=${PORT:-8000}..."
 PORT=${PORT:-8000}
 envsubst '$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
+echo "==> Discovering packages..."
+php artisan package:discover --ansi
+
 echo "==> Caching Laravel config/routes/views..."
 php artisan config:cache
 php artisan route:cache
