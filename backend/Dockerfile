@@ -54,12 +54,16 @@ RUN mkdir -p /var/www/storage/logs /var/www/storage/framework/cache /var/www/sto
 COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+# Fix Windows CRLF line endings in config files
+RUN sed -i 's/\r$//' /etc/nginx/nginx.conf.template /etc/supervisord.conf /usr/local/etc/php/conf.d/custom.ini
 
 # Copy startup scripts
 COPY docker/start.sh /start.sh
 COPY docker/start-reverb.sh /start-reverb.sh
 COPY docker/start-worker.sh /start-worker.sh
-RUN chmod +x /start.sh /start-reverb.sh /start-worker.sh
+# Fix Windows CRLF line endings so scripts run on Linux
+RUN sed -i 's/\r$//' /start.sh /start-reverb.sh /start-worker.sh \
+    && chmod +x /start.sh /start-reverb.sh /start-worker.sh
 
 EXPOSE 8000
 
