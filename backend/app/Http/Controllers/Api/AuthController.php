@@ -42,8 +42,6 @@ class AuthController extends Controller
 
             $hasGoogleId = Schema::hasColumn('users', 'google_id');
             $hasAuthProvider = Schema::hasColumn('users', 'auth_provider');
-            $hasUsername = Schema::hasColumn('users', 'username');
-
             $query = User::query();
 
             if ($hasGoogleId) {
@@ -62,12 +60,6 @@ class AuthController extends Controller
                     'password' => Hash::make(Str::random(40)),
                 ];
 
-                if ($hasUsername) {
-                    $payload['username'] = $this->generateUniqueUsername(
-                        $displayName !== '' ? $displayName : Str::before($email, '@')
-                    );
-                }
-
                 if ($hasGoogleId) {
                     $payload['google_id'] = $googleId;
                 }
@@ -84,10 +76,6 @@ class AuthController extends Controller
 
                 if ($hasAuthProvider && !$user->auth_provider) {
                     $user->auth_provider = 'google';
-                }
-
-                if ($hasUsername && empty($user->username)) {
-                    $user->username = $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@'));
                 }
 
                 if (empty($user->name) && $displayName !== '') {
