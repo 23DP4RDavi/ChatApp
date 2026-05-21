@@ -342,7 +342,11 @@ const fetchNotifications = async () => {
 
 const startNotificationsPolling = () => {
   stopNotificationsPolling()
-  notificationsInterval = setInterval(fetchNotifications, 15000)
+  notificationsInterval = setInterval(() => {
+    if (!document.hidden) {
+      fetchNotifications()
+    }
+  }, 30000)
 }
 
 const stopNotificationsPolling = () => {

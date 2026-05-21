@@ -1278,6 +1278,7 @@ const groupedMessages = computed(() => {
 })
 
 let pollingInterval = null
+let isPollingMessages = false
 
 // --- Discord feature computed & helpers ---
 const pinnedMessages = computed(() => messages.value.filter(m => m.is_pinned))
@@ -2394,11 +2395,13 @@ const legacyToPaths = (data, canvas) => {
 const pollMessages = async () => {
   if (!selectedConversation.value) return
   if (selectedConversation.value.type === 'group' && !selectedChannel.value) return
+  if (document.hidden || isPollingMessages) return
 
   const lastId = messages.value.length > 0 ? messages.value[messages.value.length - 1].id : 0
   const params = { last_id: lastId }
   if (selectedChannel.value) params.channel_id = selectedChannel.value.id
 
+  isPollingMessages = true
   try {
     const response = await api.get(`/conversations/${selectedConversation.value.id}/messages/new`, { params })
     if (response.data.data.length > 0) {
@@ -2412,12 +2415,14 @@ const pollMessages = async () => {
     }
   } catch (error) {
     console.error('Failed to poll messages:', error)
+  } finally {
+    isPollingMessages = false
   }
 }
 
 const startPolling = () => {
   stopPolling()
-  pollingInterval = setInterval(pollMessages, 2000)
+  pollingInterval = setInterval(pollMessages, 5000)
 }
 
 const stopPolling = () => {

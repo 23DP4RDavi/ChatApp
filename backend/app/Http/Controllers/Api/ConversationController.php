@@ -136,21 +136,23 @@ class ConversationController extends Controller
             ->unique()
             ->values();
 
-        $friendIds = Friendship::where('status', 'accepted')
-            ->where(function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->orWhere('friend_id', $userId);
-            })
-            ->get()
-            ->map(function ($friendship) use ($userId) {
-                return (int) ($friendship->user_id === $userId ? $friendship->friend_id : $friendship->user_id);
-            });
+        if ($participantIds->isNotEmpty()) {
+            $friendIds = Friendship::where('status', 'accepted')
+                ->where(function ($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                        ->orWhere('friend_id', $userId);
+                })
+                ->get()
+                ->map(function ($friendship) use ($userId) {
+                    return (int) ($friendship->user_id === $userId ? $friendship->friend_id : $friendship->user_id);
+                });
 
-        $nonFriendParticipants = $participantIds->diff($friendIds);
-        if ($nonFriendParticipants->isNotEmpty()) {
-            return response()->json([
-                'message' => 'You can only add friends to a group',
-            ], 403);
+            $nonFriendParticipants = $participantIds->diff($friendIds);
+            if ($nonFriendParticipants->isNotEmpty()) {
+                return response()->json([
+                    'message' => 'You can only add friends to a group',
+                ], 403);
+            }
         }
 
         try {
