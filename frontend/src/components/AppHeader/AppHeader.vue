@@ -89,16 +89,13 @@
                   <v-img v-if="user.avatar_thumbnail" :src="user.avatar_thumbnail" cover />
                   <v-icon v-else size="34">mdi-account-circle</v-icon>
                 </v-avatar>
-                <span class="user-name-text">{{ user.name }}</span>
-                  <span class="user-name-text">{{ getUserDisplayName(user) }}</span>
+                <span class="user-name-text">{{ getUserDisplayName(user) }}</span>
                 <v-icon size="14" class="ml-1 chevron-icon">mdi-chevron-down</v-icon>
               </v-btn>
             </template>
             <v-list density="compact" min-width="180" class="user-menu">
               <div class="user-menu-header pa-3">
-                <div class="text-body-2 font-weight-semibold">{{ user.name }}</div>
-                  <div class="text-body-2 font-weight-semibold">{{ getUserDisplayName(user) }}</div>
-                  <div class="text-body-2 font-weight-semibold">{{ getUserDisplayName(user) }}</div>
+                <div class="text-body-2 font-weight-semibold">{{ getUserDisplayName(user) }}</div>
                 <div class="text-caption" style="color: var(--c-muted)">{{ user.username ? '@' + user.username : user.email }}</div>
               </div>
               <v-divider />
@@ -146,8 +143,8 @@
         <v-icon v-else size="36">mdi-account-circle</v-icon>
       </v-avatar>
       <div>
-        <div class="text-body-2 font-weight-semibold">{{ user.name }}</div>
-        <div class="text-caption" style="color: var(--c-muted)">{{ user.email }}</div>
+        <div class="text-body-2 font-weight-semibold">{{ getUserDisplayName(user) }}</div>
+        <div class="text-caption" style="color: var(--c-muted)">{{ user.username ? '@' + user.username : user.email }}</div>
       </div>
     </div>
     <v-divider v-if="user" />

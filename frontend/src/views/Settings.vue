@@ -382,6 +382,63 @@ const clearAvatarBackground = () => {
   avatarCtx.value.fillRect(0, 0, avatarCanvas.value.width, avatarCanvas.value.height)
 }
 
+const hexToRgb = (hex) => {
+  const normalized = String(hex || '#000000').replace('#', '')
+  return [
+    parseInt(normalized.slice(0, 2), 16),
+    parseInt(normalized.slice(2, 4), 16),
+    parseInt(normalized.slice(4, 6), 16),
+  ]
+}
+
+const applyAvatarFloodFill = (sx, sy, fillHex) => {
+  if (!avatarCanvas.value || !avatarCtx.value) return
+
+  const canvas = avatarCanvas.value
+  const ctx = avatarCtx.value
+  const [fillR, fillG, fillB] = hexToRgb(fillHex)
+  const startX = Math.max(0, Math.min(canvas.width - 1, Math.round(sx)))
+  const startY = Math.max(0, Math.min(canvas.height - 1, Math.round(sy)))
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const data = imageData.data
+  const startIndex = (startY * canvas.width + startX) * 4
+  const [targetR, targetG, targetB] = [data[startIndex], data[startIndex + 1], data[startIndex + 2]]
+
+  if (targetR === fillR && targetG === fillG && targetB === fillB) {
+    return
+  }
+
+  const matches = (index) => (
+    Math.abs(data[index] - targetR) < 32 &&
+    Math.abs(data[index + 1] - targetG) < 32 &&
+    Math.abs(data[index + 2] - targetB) < 32
+  )
+
+  const visited = new Uint8Array(canvas.width * canvas.height)
+  const stack = [[startX, startY]]
+
+  while (stack.length > 0) {
+    const [x, y] = stack.pop()
+    if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) continue
+
+    const visitIndex = y * canvas.width + x
+    if (visited[visitIndex]) continue
+
+    const pixelIndex = visitIndex * 4
+    if (!matches(pixelIndex)) continue
+
+    visited[visitIndex] = 1
+    data[pixelIndex] = fillR
+    data[pixelIndex + 1] = fillG
+    data[pixelIndex + 2] = fillB
+    data[pixelIndex + 3] = 255
+
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1])
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+}
+
 const redrawAvatarCanvas = () => {
   if (!avatarCtx.value || !avatarCanvas.value) return
 
@@ -400,6 +457,12 @@ const redrawAvatarCanvas = () => {
   })
 
   avatarPaths.value.forEach((path) => {
+    if (path?.type === 'fill') {
+      const mappedPoint = mapPoint({ x: path.x || 0, y: path.y || 0 })
+      applyAvatarFloodFill(mappedPoint.x, mappedPoint.y, path.color || '#000000')
+      return
+    }
+
     if (!Array.isArray(path.points) || path.points.length < 1) return
 
     const brushType = path.brushType || 'pen'
