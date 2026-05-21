@@ -8,6 +8,7 @@ use App\Models\GroupChannel;
 use App\Models\GroupMemberRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class GroupChannelController extends Controller
 {
@@ -28,6 +29,7 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
         $channels = $conv->channels()->orderBy('position')->get();
+        $hasAllowedRoleIds = Schema::hasColumn('group_channels', 'allowed_role_ids');
 
         // Owners can see all channels; members only see channels they have role access to
         if ((int) $conv->owner_id !== (int) Auth::id()) {
@@ -37,12 +39,17 @@ class GroupChannelController extends Controller
                 ->toArray();
 
             $channels = $channels->filter(function ($channel) use ($userRoleIds) {
-                $allowed = $channel->allowed_role_ids;
+                $allowed = $channel->allowed_role_ids ?? [];
                 // No restrictions — everyone can view
                 if (empty($allowed)) return true;
                 // User must have at least one allowed role
                 return count(array_intersect($userRoleIds, $allowed)) > 0;
             })->values();
+
+            // If role restrictions column is missing, all channels are visible.
+            if (!$hasAllowedRoleIds) {
+                $channels = $conv->channels()->orderBy('position')->get();
+            }
         }
 
         return response()->json(['channels' => $channels]);
@@ -59,14 +66,27 @@ class GroupChannelController extends Controller
             'category' => 'sometimes|string|max:100',
         ]);
 
-        $position = $conv->channels()->max('position') + 1;
-        $channel = GroupChannel::create([
+        $position = (int) $conv->channels()->max('position') + 1;
+
+        $payload = [
             'conversation_id' => $groupId,
             'name' => strtolower(preg_replace('/\s+/', '-', trim($data['name']))),
-            'type' => $data['type'] ?? 'text',
-            'category' => $data['category'] ?? 'Text Channels',
             'position' => $position,
-        ]);
+        ];
+
+        if (Schema::hasColumn('group_channels', 'type')) {
+            $payload['type'] = $data['type'] ?? 'text';
+        }
+
+        if (Schema::hasColumn('group_channels', 'category')) {
+            $payload['category'] = $data['category'] ?? 'Text Channels';
+        }
+
+        try {
+            $channel = GroupChannel::create($payload);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Failed to create channel.'], 500);
+        }
 
         return response()->json(['channel' => $channel], 201);
     }
@@ -92,7 +112,24 @@ class GroupChannelController extends Controller
             $data['name'] = strtolower(preg_replace('/\s+/', '-', trim($data['name'])));
         }
 
-        $channel->update($data);
+        if (!Schema::hasColumn('group_channels', 'type')) {
+            unset($data['type']);
+        }
+
+        if (!Schema::hasColumn('group_channels', 'category')) {
+            unset($data['category']);
+        }
+
+        if (!Schema::hasColumn('group_channels', 'allowed_role_ids')) {
+            unset($data['allowed_role_ids']);
+        }
+
+        try {
+            $channel->update($data);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Failed to update channel.'], 500);
+        }
+
         return response()->json(['channel' => $channel]);
     }
 
@@ -109,12 +146,17 @@ class GroupChannelController extends Controller
         ]);
 
         foreach ($validated['channels'] as $item) {
+            $update = [
+                'position' => $item['position'],
+            ];
+
+            if (Schema::hasColumn('group_channels', 'category')) {
+                $update['category'] = $item['category'];
+            }
+
             GroupChannel::where('id', $item['id'])
                 ->where('conversation_id', $groupId)
-                ->update([
-                    'position' => $item['position'],
-                    'category' => $item['category'],
-                ]);
+                ->update($update);
         }
 
         return response()->json([
