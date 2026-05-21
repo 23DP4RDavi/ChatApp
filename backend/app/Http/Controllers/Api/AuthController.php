@@ -28,63 +28,62 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
+            $email = trim((string) $googleUser->getEmail());
+
+            if ($email === '') {
+                return redirect($this->frontendAuthUrl([
+                    'oauth_error' => 'google_email_missing',
+                ]));
+            }
+
+            $googleId = (string) $googleUser->getId();
+            $displayName = trim((string) ($googleUser->getName() ?: $googleUser->getNickname() ?: Str::before($email, '@')));
+
+            $user = User::where('google_id', $googleId)
+                ->orWhere('email', $email)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $displayName !== '' ? $displayName : 'Google User',
+                    'username' => $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@')),
+                    'email' => $email,
+                    'password' => Hash::make(Str::random(40)),
+                    'google_id' => $googleId,
+                    'auth_provider' => 'google',
+                ]);
+            } else {
+                if (!$user->google_id) {
+                    $user->google_id = $googleId;
+                }
+
+                if (!$user->auth_provider) {
+                    $user->auth_provider = 'google';
+                }
+
+                if (empty($user->username)) {
+                    $user->username = $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@'));
+                }
+
+                if (empty($user->name) && $displayName !== '') {
+                    $user->name = $displayName;
+                }
+
+                $user->save();
+            }
+
+            $user->touch();
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return redirect($this->frontendAuthUrl([
+                'token' => $token,
+                'provider' => 'google',
+            ]));
         } catch (\Throwable $e) {
             return redirect($this->frontendAuthUrl([
-                'oauth_error' => 'google_login_failed',
+                'oauth_error' => 'google_callback_failed',
             ]));
         }
-
-        $email = trim((string) $googleUser->getEmail());
-
-        if ($email === '') {
-            return redirect($this->frontendAuthUrl([
-                'oauth_error' => 'google_email_missing',
-            ]));
-        }
-
-        $googleId = (string) $googleUser->getId();
-        $displayName = trim((string) ($googleUser->getName() ?: $googleUser->getNickname() ?: Str::before($email, '@')));
-
-        $user = User::where('google_id', $googleId)
-            ->orWhere('email', $email)
-            ->first();
-
-        if (!$user) {
-            $user = User::create([
-                'name' => $displayName !== '' ? $displayName : 'Google User',
-                'username' => $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@')),
-                'email' => $email,
-                'password' => Hash::make(Str::random(40)),
-                'google_id' => $googleId,
-                'auth_provider' => 'google',
-            ]);
-        } else {
-            if (!$user->google_id) {
-                $user->google_id = $googleId;
-            }
-
-            if (!$user->auth_provider) {
-                $user->auth_provider = 'google';
-            }
-
-            if (empty($user->username)) {
-                $user->username = $this->generateUniqueUsername($displayName !== '' ? $displayName : Str::before($email, '@'));
-            }
-
-            if (empty($user->name) && $displayName !== '') {
-                $user->name = $displayName;
-            }
-
-            $user->save();
-        }
-
-        $user->touch();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return redirect($this->frontendAuthUrl([
-            'token' => $token,
-            'provider' => 'google',
-        ]));
     }
 
     public function register(Request $request)

@@ -98,9 +98,21 @@ const loading = ref(false)
 const googleLoading = ref(false)
 const error = ref('')
 
-const backendBaseUrl = (import.meta.env.VITE_BACKEND_URL
-  || (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, ''))
+const normalizeUrl = (value) => String(value || '')
+  .trim()
+  .replace(/^['"]|['"]$/g, '')
   .replace(/\/$/, '')
+
+const backendBaseUrl = (() => {
+  const rawBackend = normalizeUrl(import.meta.env.VITE_BACKEND_URL)
+  const rawApi = normalizeUrl(import.meta.env.VITE_API_URL || 'http://localhost:8000/api')
+
+  if (rawBackend) {
+    return rawBackend.replace(/\/api\/?$/, '')
+  }
+
+  return rawApi.replace(/\/api\/?$/, '')
+})()
 
 const formData = ref({
   name: '',
@@ -159,7 +171,8 @@ const handleSubmit = async () => {
 
 const startGoogleLogin = () => {
   googleLoading.value = true
-  window.location.href = `${backendBaseUrl}/api/auth/google/redirect`
+  const redirectUrl = new URL('/api/auth/google/redirect', `${backendBaseUrl}/`)
+  window.location.href = redirectUrl.toString()
 }
 
 const handleGoogleCallback = async () => {
@@ -167,7 +180,7 @@ const handleGoogleCallback = async () => {
   const oauthError = typeof route.query.oauth_error === 'string' ? route.query.oauth_error : ''
 
   if (oauthError) {
-    error.value = t('auth.googleLoginFailed')
+    error.value = `${t('auth.googleLoginFailed')} (${oauthError})`
     await router.replace({ path: '/auth' })
     return
   }

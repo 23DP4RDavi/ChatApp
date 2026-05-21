@@ -6,6 +6,12 @@ PORT="${PORT:-8080}"
 echo "==> Clearing bootstrap cache..."
 rm -f /var/www/bootstrap/cache/*.php
 
+echo "==> Running best-effort migrations..."
+php artisan migrate --force >/tmp/migrate.log 2>&1 || echo "[WARN] migrate failed (see /tmp/migrate.log)"
+
+echo "==> Linking storage (best-effort)..."
+php artisan storage:link >/tmp/storage-link.log 2>&1 || true
+
 # Start fallback listeners on common Railway target ports in case the domain target
 # is not aligned with the runtime PORT value.
 for p in 8000 8080 9000; do
