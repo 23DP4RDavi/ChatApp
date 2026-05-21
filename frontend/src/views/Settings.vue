@@ -145,69 +145,6 @@
           <div class="settings-section settings-card">
             <h3 class="section-label">{{ t('settingsPage.avatarTitle') }}</h3>
 
-            <div class="avatar-tools">
-              <div class="avatar-tools-row">
-                <button class="avatar-tool-btn" :class="{ active: avatarTool === 'pen' }" @click="avatarTool = 'pen'" :title="t('drawPage.pen')">
-                  <v-icon size="16">mdi-pencil</v-icon>
-                </button>
-                <button class="avatar-tool-btn" :class="{ active: avatarTool === 'eraser' }" @click="avatarTool = 'eraser'" :title="t('drawPage.eraser')">
-                  <v-icon size="16">mdi-eraser</v-icon>
-                </button>
-                <span class="tool-label">Color</span>
-                <input v-model="avatarColor" type="color" class="color-picker" />
-                <button
-                  v-for="preset in avatarPresets"
-                  :key="preset"
-                  type="button"
-                  class="preset-dot"
-                  :class="{ active: avatarColor === preset }"
-                  :style="{ background: preset }"
-                  @click="avatarColor = preset"
-                />
-              </div>
-              <div class="avatar-tools-row">
-                <button
-                  v-for="brush in avatarBrushTypes"
-                  :key="brush.value"
-                  type="button"
-                  class="avatar-tool-btn"
-                  :class="{ active: avatarBrushType === brush.value }"
-                  :title="brush.label"
-                  @click="avatarBrushType = brush.value"
-                >
-                  <v-icon size="16">{{ brush.icon }}</v-icon>
-                </button>
-                <span class="tool-label">Brush</span>
-                <v-slider
-                  v-model="avatarBrush"
-                  :min="1"
-                  :max="20"
-                  :step="1"
-                  hide-details
-                  density="compact"
-                  color="primary"
-                  class="avatar-slider"
-                />
-                <span class="avatar-size-preview">
-                  <span
-                    class="avatar-size-dot"
-                    :style="{
-                      width: Math.min((avatarTool === 'eraser' ? avatarBrush * 3 : avatarBrush) * 1.5, 18) + 'px',
-                      height: Math.min((avatarTool === 'eraser' ? avatarBrush * 3 : avatarBrush) * 1.5, 18) + 'px',
-                      background: avatarTool === 'eraser' ? 'rgba(0,0,0,0.25)' : avatarColor,
-                    }"
-                  />
-                </span>
-                <v-btn size="small" variant="text" prepend-icon="mdi-undo" @click="undoAvatar" :disabled="avatarPaths.length === 0">
-                  Undo
-                </v-btn>
-                <v-btn size="small" variant="text" prepend-icon="mdi-redo" @click="redoAvatar" :disabled="avatarRedoStack.length === 0">
-                  Redo
-                </v-btn>
-              </div>
-            </div>
-
-            <!-- Preview + draw button -->
             <div class="avatar-preview-row">
               <div class="avatar-preview-wrap">
                 <canvas
@@ -215,18 +152,16 @@
                   width="420"
                   height="420"
                   class="avatar-canvas"
-                  @pointerdown.prevent="startAvatarDrawing"
-                  @pointermove.prevent="drawAvatar"
-                  @pointerup.prevent="stopAvatarDrawing"
-                  @pointerleave.prevent="stopAvatarDrawing"
-                  @pointercancel.prevent="stopAvatarDrawing"
                 />
                 <div v-if="avatarPaths.length === 0" class="avatar-empty-hint">
                   <v-icon size="32" color="rgba(255,255,255,0.2)">mdi-account-outline</v-icon>
                 </div>
               </div>
               <div class="avatar-draw-actions">
-                <div class="tool-label">Draw directly on the avatar preview.</div>
+                <div class="tool-label">Use the same square drawer as the group avatar editor.</div>
+                <v-btn color="primary" prepend-icon="mdi-draw" @click="avatarEditorOpen = true">
+                  Open editor
+                </v-btn>
                 <v-btn v-if="avatarPaths.length > 0" variant="outlined" color="error"
                   prepend-icon="mdi-delete" @click="clearAvatar">
                   {{ t('settingsPage.clearAvatar') }}
@@ -249,11 +184,20 @@
       {{ snackbar.text }}
     </v-snackbar>
 
+    <DrawDialog
+      v-model="avatarEditorOpen"
+      :square-only="true"
+      :show-caption="false"
+      :initial-paths="avatarPaths"
+      @save="onAvatarDrawingSave"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import DrawDialog from '@/components/DrawDialog'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
 
@@ -263,6 +207,7 @@ const { t, language, setLanguage } = useI18n()
 const activeTab = ref('profile')
 const savingProfile = ref(false)
 const savingAvatar = ref(false)
+const avatarEditorOpen = ref(false)
 
 const profile = ref({
   name: '',
@@ -277,21 +222,7 @@ const profile = ref({
 
 const avatarCanvas = ref(null)
 const avatarCtx = ref(null)
-const avatarIsDrawing = ref(false)
 const avatarPaths = ref([])
-const avatarRedoStack = ref([])
-const avatarCurrentPath = ref([])
-const avatarColor = ref('#111827')
-const avatarBrush = ref(4)
-const avatarTool = ref('pen')
-const avatarBrushType = ref('pen')
-const avatarPresets = ['#111827', '#2563eb', '#db2777', '#16a34a', '#ea580c', '#7c3aed']
-const avatarBrushTypes = [
-  { value: 'pen', label: 'Round', icon: 'mdi-circle' },
-  { value: 'square', label: 'Square', icon: 'mdi-square' },
-  { value: 'marker', label: 'Marker', icon: 'mdi-marker' },
-  { value: 'spray', label: 'Spray', icon: 'mdi-spray' },
-]
 
 const preferences = ref({
   largeText: false,
@@ -488,105 +419,13 @@ const redrawAvatarCanvas = () => {
   })
 }
 
-const getAvatarCoordinates = (event) => {
-  if (!avatarCanvas.value) return { x: 0, y: 0 }
-
-  const rect = avatarCanvas.value.getBoundingClientRect()
-  const source = event.touches?.[0] || event
-  return {
-    x: source.clientX - rect.left,
-    y: source.clientY - rect.top,
-  }
-}
-
-const startAvatarDrawing = (event) => {
-  if (!avatarCtx.value) return
-
-  avatarIsDrawing.value = true
-  const { x, y } = getAvatarCoordinates(event)
-
-  avatarCurrentPath.value = [{ x, y }]
-  avatarPaths.value.push({
-    color: avatarTool.value === 'eraser' ? '#FFFFFF' : avatarColor.value,
-    width: avatarTool.value === 'eraser' ? avatarBrush.value * 3 : avatarBrush.value,
-    brushType: avatarTool.value === 'eraser' ? 'eraser' : avatarBrushType.value,
-    points: avatarCurrentPath.value,
-  })
-  avatarRedoStack.value = []
-}
-
-const drawAvatar = (event) => {
-  if (!avatarIsDrawing.value || !avatarCtx.value) return
-
-  const { x, y } = getAvatarCoordinates(event)
-  const strokeColor = avatarTool.value === 'eraser' ? '#FFFFFF' : avatarColor.value
-  const strokeWidth = avatarTool.value === 'eraser' ? avatarBrush.value * 3 : avatarBrush.value
-  const brushType = avatarTool.value === 'eraser' ? 'eraser' : avatarBrushType.value
-
-  if (brushType === 'spray') {
-    const density = 20
-    const radius = strokeWidth * 3
-    const dots = []
-    avatarCtx.value.fillStyle = strokeColor
-    avatarCtx.value.globalAlpha = 0.8
-    for (let index = 0; index < density; index += 1) {
-      const angle = Math.random() * Math.PI * 2
-      const distance = Math.sqrt(Math.random()) * radius
-      const dot = {
-        x: x + distance * Math.cos(angle),
-        y: y + distance * Math.sin(angle),
-        r: Math.max(0.5, strokeWidth * 0.18),
-      }
-      dots.push(dot)
-      avatarCtx.value.beginPath()
-      avatarCtx.value.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2)
-      avatarCtx.value.fill()
-    }
-    avatarCtx.value.globalAlpha = 1
-    avatarCurrentPath.value.push({ x, y, dots })
-    return
-  }
-
-  avatarCurrentPath.value.push({ x, y })
-
-  avatarCtx.value.strokeStyle = strokeColor
-  avatarCtx.value.lineWidth = brushType === 'marker' ? strokeWidth * 2.5 : strokeWidth
-  avatarCtx.value.lineCap = brushType === 'square' ? 'square' : 'round'
-  avatarCtx.value.lineJoin = brushType === 'square' ? 'miter' : 'round'
-  avatarCtx.value.globalAlpha = brushType === 'marker' ? 0.35 : 1
-
-  const points = avatarCurrentPath.value
-  const previous = points[points.length - 2]
-
-  if (!previous) return
-
-  avatarCtx.value.beginPath()
-  avatarCtx.value.moveTo(previous.x, previous.y)
-  avatarCtx.value.lineTo(x, y)
-  avatarCtx.value.stroke()
-  avatarCtx.value.globalAlpha = 1
-}
-
-const stopAvatarDrawing = () => {
-  avatarIsDrawing.value = false
-}
-
-const undoAvatar = () => {
-  if (avatarPaths.value.length === 0) return
-  avatarRedoStack.value.push(avatarPaths.value.pop())
-  redrawAvatarCanvas()
-}
-
-const redoAvatar = () => {
-  if (avatarRedoStack.value.length === 0) return
-  avatarPaths.value.push(avatarRedoStack.value.pop())
+const onAvatarDrawingSave = ({ paths }) => {
+  avatarPaths.value = Array.isArray(paths) ? JSON.parse(JSON.stringify(paths)) : []
   redrawAvatarCanvas()
 }
 
 const clearAvatar = () => {
   avatarPaths.value = []
-  avatarRedoStack.value = []
-  avatarCurrentPath.value = []
   redrawAvatarCanvas()
 }
 
@@ -763,95 +602,11 @@ watch(activeTab, async (value) => {
 }
 
 /* Avatar tab */
-.avatar-tools {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-md);
-  padding: 12px 16px;
-  margin-bottom: 16px;
-}
-
-.avatar-tools-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.avatar-tool-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid var(--c-border-md);
-  background: rgba(255,255,255,0.04);
-  color: var(--c-text);
-  cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
-}
-
-.avatar-tool-btn:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.28);
-}
-
-.avatar-tool-btn.active {
-  background: rgba(124,58,237,0.18);
-  border-color: rgba(124,58,237,0.5);
-  color: #d8b4fe;
-}
-
-.avatar-tools-row:last-child { margin-bottom: 0; }
-
 .tool-label {
   font-size: 0.75rem;
   color: var(--c-muted);
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.color-picker {
-  width: 30px;
-  height: 26px;
-  border: 1px solid var(--c-border-md);
-  border-radius: 6px;
-  padding: 0;
-  cursor: pointer;
-  background: none;
-}
-
-.preset-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 150ms, transform 150ms;
-}
-
-.preset-dot.active,
-.preset-dot:hover {
-  border-color: var(--c-text);
-  transform: scale(1.15);
-}
-
-.avatar-slider { flex: 1; min-width: 100px; }
-
-.avatar-size-preview {
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-size-dot {
-  border-radius: 999px;
-  display: inline-block;
+  max-width: 280px;
 }
 
 .avatar-preview-row {
@@ -884,8 +639,6 @@ watch(activeTab, async (value) => {
   width: 100%;
   height: 100%;
   display: block;
-  cursor: crosshair;
-  touch-action: none;
 }
 
 .avatar-draw-actions {

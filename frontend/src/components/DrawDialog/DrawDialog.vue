@@ -116,7 +116,7 @@
       <!-- ── Footer ── -->
       <div class="dd-footer">
         <input
-          v-if="!squareOnly || !isMobile"
+          v-if="showCaption && (!squareOnly || !isMobile)"
           v-model="caption"
           class="dd-caption-input"
           placeholder="Add a message… (optional)"
@@ -141,6 +141,8 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   squareOnly: { type: Boolean, default: false },
+  showCaption: { type: Boolean, default: true },
+  initialPaths: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -228,15 +230,34 @@ const textInputStyle = computed(() => {
   }
 })
 
+const clonePaths = (source) => JSON.parse(JSON.stringify(Array.isArray(source) ? source : []))
+
+const hydrateInitialPaths = () => {
+  paths.value = clonePaths(props.initialPaths)
+  redoStack.value = []
+  currentPath.value = []
+  floatingLayer.value = null
+  textEditorVisible.value = false
+  textDraft.value = ''
+  caption.value = ''
+  tool.value = 'pen'
+}
+
+const initAndRedrawCanvas = () => {
+  initCanvas()
+  redrawCanvas()
+}
+
 // ── Open / close ─────────────────────────────────────────────────────────────
 watch(() => props.modelValue, (val) => {
   if (val) {
+    hydrateInitialPaths()
     nextTick(() => {
       if (canvas.value) {
-        initCanvas()
+        initAndRedrawCanvas()
       } else {
         // Dialog animation not complete yet — retry after animation
-        setTimeout(initCanvas, 350)
+        setTimeout(initAndRedrawCanvas, 350)
       }
       window.addEventListener('keydown', handleKeyDown)
       syncViewportMode()
@@ -268,7 +289,7 @@ const accept = () => {
 }
 
 const resetState = () => {
-  paths.value = []
+  paths.value = clonePaths(props.initialPaths)
   redoStack.value = []
   currentPath.value = []
   floatingLayer.value = null

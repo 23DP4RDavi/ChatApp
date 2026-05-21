@@ -1638,12 +1638,6 @@ const loadConversations = async () => {
   try {
     const response = await api.get('/conversations')
     conversations.value = response.data.conversations
-    
-    // If there's a conversation ID in the route, select it
-    if (route.params.id) {
-      const conv = conversations.value.find(c => c.id == route.params.id)
-      if (conv) await selectConversation(conv)
-    }
   } catch (error) {
     console.error('Failed to load conversations:', error)
   }
@@ -2509,20 +2503,22 @@ const pulsePresence = async () => {
   try { await api.post('/presence/pulse') } catch { /* ignore */ }
 }
 
-const openConversationFromRoute = () => {
+const openConversationFromRoute = async () => {
   const routeConversationId = route.params.id
 
   if (!routeConversationId) return
 
   const conversation = conversations.value.find((item) => String(item.id) === String(routeConversationId))
   if (conversation && String(selectedConversation.value?.id ?? '') !== String(conversation.id)) {
-    selectConversation(conversation)
+    await selectConversation(conversation)
   }
 }
 
 onMounted(async () => {
-  await getCurrentUser()
-  await loadConversations()
+  await Promise.all([
+    getCurrentUser(),
+    loadConversations(),
+  ])
   openConversationFromRoute()
   window.addEventListener('resize', resizeDrawingCanvas)
   await nextTick()
