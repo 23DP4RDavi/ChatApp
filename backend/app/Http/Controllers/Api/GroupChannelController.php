@@ -9,27 +9,74 @@ use App\Models\GroupMemberRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 class GroupChannelController extends Controller
 {
+    private function ensureGroupSchema(): bool
+    {
+        try {
+            if (!Schema::hasTable('group_channels')) {
+                Schema::create('group_channels', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
+                    $table->string('name');
+                    $table->string('type')->default('text');
+                    $table->integer('position')->default(0);
+                    $table->timestamps();
+                });
+            }
+
+            if (!Schema::hasColumn('group_channels', 'category')) {
+                Schema::table('group_channels', function (Blueprint $table) {
+                    $table->string('category')->default('Text Channels')->after('type');
+                });
+            }
+
+            if (!Schema::hasColumn('group_channels', 'allowed_role_ids')) {
+                Schema::table('group_channels', function (Blueprint $table) {
+                    $table->json('allowed_role_ids')->nullable()->after('category');
+                });
+            }
+
+            if (!Schema::hasTable('group_roles')) {
+                Schema::create('group_roles', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
+                    $table->string('name');
+                    $table->string('color')->default('#99aab5');
+                    $table->json('permissions')->nullable();
+                    $table->integer('position')->default(0);
+                    $table->boolean('is_default')->default(false);
+                    $table->timestamps();
+                });
+            }
+
+            if (!Schema::hasTable('group_member_roles')) {
+                Schema::create('group_member_roles', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
+                    $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                    $table->foreignId('role_id')->constrained('group_roles')->onDelete('cascade');
+                    $table->timestamps();
+                    $table->unique(['conversation_id', 'user_id', 'role_id']);
+                });
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     private function hasChannelsTable(): bool
     {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
-        }
-        $cached = Schema::hasTable('group_channels');
-        return $cached;
+        return Schema::hasTable('group_channels');
     }
 
     private function hasMemberRolesTable(): bool
     {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
-        }
-        $cached = Schema::hasTable('group_member_roles');
-        return $cached;
+        return Schema::hasTable('group_member_roles');
     }
 
     private function hasOwnerColumn(): bool
@@ -72,6 +119,13 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
 
+        if (!$this->ensureGroupSchema()) {
+            return response()->json([
+                'channels' => [],
+                'message' => 'Channels are not available yet. Schema initialization failed.',
+            ], 503);
+        }
+
         if (!$this->hasChannelsTable()) {
             return response()->json([
                 'channels' => [],
@@ -107,6 +161,10 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
+
+        if (!$this->ensureGroupSchema()) {
+            return response()->json(['message' => 'Channels are not available yet. Schema initialization failed.'], 503);
+        }
 
         if (!$this->hasChannelsTable()) {
             return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
@@ -147,6 +205,10 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
+
+        if (!$this->ensureGroupSchema()) {
+            return response()->json(['message' => 'Channels are not available yet. Schema initialization failed.'], 503);
+        }
 
         if (!$this->hasChannelsTable()) {
             return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
@@ -194,6 +256,10 @@ class GroupChannelController extends Controller
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
 
+        if (!$this->ensureGroupSchema()) {
+            return response()->json(['message' => 'Channels are not available yet. Schema initialization failed.'], 503);
+        }
+
         if (!$this->hasChannelsTable()) {
             return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
         }
@@ -229,6 +295,10 @@ class GroupChannelController extends Controller
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
 
+        if (!$this->ensureGroupSchema()) {
+            return response()->json(['message' => 'Channels are not available yet. Schema initialization failed.'], 503);
+        }
+
         if (!$this->hasChannelsTable()) {
             return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
         }
@@ -247,6 +317,8 @@ class GroupChannelController extends Controller
     public function members($groupId)
     {
         $conv = $this->getGroupOrFail($groupId);
+
+        $this->ensureGroupSchema();
 
         if (!$this->hasMemberRolesTable()) {
             $members = $conv->users()->with([])->get()->map(function ($user) use ($conv) {
