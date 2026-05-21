@@ -44,8 +44,8 @@ RUN composer install --no-scripts --no-autoloader --no-dev --no-interaction --pr
 # Copy application source
 COPY . .
 
-# Remove any committed bootstrap cache (may contain dev-only providers like Pail)
-RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
+# Remove any committed bootstrap cache (may contain stale dev-only providers)
+RUN rm -f bootstrap/cache/*.php
 
 # Finalise autoloader (skip post-autoload scripts — package:discover runs at container startup)
 RUN composer dump-autoload --optimize --no-dev --no-scripts
