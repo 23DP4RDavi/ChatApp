@@ -14,6 +14,74 @@ use Illuminate\Support\Facades\Schema;
 
 class ConversationController extends Controller
 {
+    private function ensureFriendDirectConversations(int $userId): void
+    {
+        try {
+            $friendIds = Friendship::where('status', 'accepted')
+                ->where(function ($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                        ->orWhere('friend_id', $userId);
+                })
+                ->get(['user_id', 'friend_id'])
+                ->map(function ($friendship) use ($userId) {
+                    return (int) ($friendship->user_id === $userId ? $friendship->friend_id : $friendship->user_id);
+                })
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values();
+
+            if ($friendIds->isEmpty()) {
+                return;
+            }
+
+            $directConversations = Conversation::where('type', 'direct')
+                ->whereHas('participants', fn ($query) => $query->where('user_id', $userId))
+                ->with('participants:id,conversation_id,user_id')
+                ->get();
+
+            $existingFriendIds = $directConversations
+                ->map(function ($conversation) use ($userId) {
+                    return optional($conversation->participants->firstWhere('user_id', '!=', $userId))->user_id;
+                })
+                ->filter(fn ($id) => !is_null($id))
+                ->map(fn ($id) => (int) $id)
+                ->unique();
+
+            $missingFriendIds = $friendIds->diff($existingFriendIds)->values();
+
+            if ($missingFriendIds->isEmpty()) {
+                return;
+            }
+
+            foreach ($missingFriendIds as $friendId) {
+                DB::transaction(function () use ($userId, $friendId) {
+                    $existing = Conversation::where('type', 'direct')
+                        ->whereHas('participants', fn ($query) => $query->where('user_id', $userId))
+                        ->whereHas('participants', fn ($query) => $query->where('user_id', $friendId))
+                        ->first();
+
+                    if ($existing) {
+                        return;
+                    }
+
+                    $created = Conversation::create(['type' => 'direct']);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $created->id,
+                        'user_id' => $userId,
+                    ]);
+
+                    ConversationParticipant::create([
+                        'conversation_id' => $created->id,
+                        'user_id' => $friendId,
+                    ]);
+                });
+            }
+        } catch (\Throwable $e) {
+            // Keep conversation list available even if auto-DM bootstrap fails.
+        }
+    }
+
     public function getOrCreate(Request $request)
     {
         $friendId = $request->validate([
@@ -68,6 +136,10 @@ class ConversationController extends Controller
     public function listConversations()
     {
         $userId = Auth::id();
+
+        // Ensure accepted friends always show up as DMs without requiring manual chat creation.
+        $this->ensureFriendDirectConversations((int) $userId);
+
         $conversations = Conversation::whereHas('participants', fn ($query) => $query->where('user_id', $userId))
             ->with(['users', 'latestMessage.user'])
             ->orderByDesc('updated_at')
