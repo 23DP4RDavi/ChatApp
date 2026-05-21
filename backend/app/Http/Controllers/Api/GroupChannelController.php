@@ -12,6 +12,26 @@ use Illuminate\Support\Facades\Schema;
 
 class GroupChannelController extends Controller
 {
+    private function hasChannelsTable(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        $cached = Schema::hasTable('group_channels');
+        return $cached;
+    }
+
+    private function hasMemberRolesTable(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        $cached = Schema::hasTable('group_member_roles');
+        return $cached;
+    }
+
     private function hasOwnerColumn(): bool
     {
         static $cached = null;
@@ -51,13 +71,20 @@ class GroupChannelController extends Controller
     public function index($groupId)
     {
         $conv = $this->getGroupOrFail($groupId);
+
+        if (!$this->hasChannelsTable()) {
+            return response()->json([
+                'channels' => [],
+                'message' => 'Channels are not available yet. Run database migrations.',
+            ]);
+        }
+
         $channels = $conv->channels()->orderBy('position')->get();
         $hasAllowedRoleIds = Schema::hasColumn('group_channels', 'allowed_role_ids');
-        $hasMemberRolesTable = Schema::hasTable('group_member_roles');
         $isOwner = !$this->hasOwnerColumn() || (int) $conv->owner_id === (int) Auth::id();
 
         // Owners can see all channels; members only see channels they have role access to
-        if (!$isOwner && $hasAllowedRoleIds && $hasMemberRolesTable) {
+        if (!$isOwner && $hasAllowedRoleIds && $this->hasMemberRolesTable()) {
             $userRoleIds = GroupMemberRole::where('conversation_id', $groupId)
                 ->where('user_id', Auth::id())
                 ->pluck('role_id')
@@ -80,6 +107,10 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
+
+        if (!$this->hasChannelsTable()) {
+            return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
+        }
 
         $data = $request->validate([
             'name'     => 'required|string|max:100',
@@ -116,6 +147,10 @@ class GroupChannelController extends Controller
     {
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
+
+        if (!$this->hasChannelsTable()) {
+            return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
+        }
 
         $channel = GroupChannel::where('id', $channelId)
             ->where('conversation_id', $groupId)
@@ -159,6 +194,10 @@ class GroupChannelController extends Controller
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
 
+        if (!$this->hasChannelsTable()) {
+            return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
+        }
+
         $validated = $request->validate([
             'channels'             => 'required|array',
             'channels.*.id'        => 'required|integer',
@@ -190,6 +229,10 @@ class GroupChannelController extends Controller
         $conv = $this->getGroupOrFail($groupId);
         $this->assertOwner($conv);
 
+        if (!$this->hasChannelsTable()) {
+            return response()->json(['message' => 'Channels are not available yet. Run database migrations.'], 503);
+        }
+
         $channel = GroupChannel::where('id', $channelId)
             ->where('conversation_id', $groupId)
             ->firstOrFail();
@@ -204,6 +247,21 @@ class GroupChannelController extends Controller
     public function members($groupId)
     {
         $conv = $this->getGroupOrFail($groupId);
+
+        if (!$this->hasMemberRolesTable()) {
+            $members = $conv->users()->with([])->get()->map(function ($user) use ($conv) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'avatar_thumbnail' => $user->avatar_thumbnail,
+                    'is_owner' => $this->hasOwnerColumn() ? ((int) $conv->owner_id === (int) $user->id) : false,
+                    'roles' => [],
+                ];
+            });
+
+            return response()->json(['members' => $members]);
+        }
 
         $members = $conv->users()->with([])->get()->map(function ($user) use ($conv) {
             $memberRoles = \App\Models\GroupMemberRole::with('role')
