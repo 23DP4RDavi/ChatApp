@@ -15,7 +15,13 @@ class AuthController extends Controller
 {
     public function googleRedirect()
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        try {
+            return Socialite::driver('google')->stateless()->redirect();
+        } catch (\Throwable $e) {
+            return redirect($this->frontendAuthUrl([
+                'oauth_error' => 'google_config_invalid',
+            ]));
+        }
     }
 
     public function googleCallback(Request $request)
