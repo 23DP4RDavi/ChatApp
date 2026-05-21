@@ -1839,6 +1839,7 @@ const generateInvite = async () => {
     inviteUrl.value = res.data.url
   } catch (e) {
     console.error('Failed to generate invite:', e)
+    showSnackbarMsg(e?.response?.data?.message || 'Failed to generate invite link', 'error')
   } finally {
     generatingInvite.value = false
   }
