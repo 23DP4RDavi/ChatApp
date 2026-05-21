@@ -1,72 +1,91 @@
-/* Doodle Island - Global Styles */
+/* ── DoodleVerse Design System ──────────────────────── */
 
-/* Color Variables */
 :root {
-  --primary-pink: #FF1493;
-  --primary-gold: #FFD700;
-  --primary-blue: #87CEEB;
-  --primary-tomato: #FF6347;
-  --primary-purple: #9370DB;
-  --primary-hotpink: #FF69B4;
-  --primary-lightblue: #ADD8E6;
-  --primary-palegreen: #98FB98;
-  
-  --background-dark: #0f0f23;
-  --background-darker: #1a1a2e;
-  --background-navy: #16213e;
-  --background-deepnavy: #1e1e3f;
-  --background-darkerpurple: #2d2d44;
-  
-  --shadow-gold: rgba(255, 215, 0, 0.4);
-  --shadow-pink: rgba(255, 105, 180, 0.4);
-  --shadow-blue: rgba(135, 206, 235, 0.4);
+  /* Backgrounds */
+  --c-bg:          #111318;
+  --c-sidebar:     #1a1b1e;
+  --c-surface:     #25262b;
+  --c-card:        #2c2e33;
+  --c-elevated:    #383a40;
+
+  /* Borders */
+  --c-border:      rgba(255, 255, 255, 0.07);
+  --c-border-md:   rgba(255, 255, 255, 0.12);
+
+  /* Accent (purple) */
+  --c-accent:      #7c3aed;
+  --c-accent-dim:  #6d28d9;
+  --c-accent-soft: rgba(124, 58, 237, 0.14);
+
+  /* Text */
+  --c-text:        #dbdee1;
+  --c-text-dim:    #adb5bd;
+  --c-muted:       #868e96;
+
+  /* Semantic */
+  --c-success:     #3fb950;
+  --c-error:       #f85149;
+  --c-warning:     #e6a817;
+
+  /* Radius */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  16px;
+  --r-xl:  24px;
 }
 
-/* Base Styles */
-* {
-  box-sizing: border-box;
-}
+/* ── Base reset ── */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-  color: #E6E6FA;
+  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
   min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Gradient Backgrounds */
-.gradient-bg {
-  background: linear-gradient(135deg, var(--background-darker) 0%, var(--background-navy) 100%);
+#app { min-height: 100vh; }
+
+/* ── Vuetify overrides ── */
+.v-application {
+  background-color: var(--c-bg) !important;
+  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif !important;
+  color: var(--c-text) !important;
 }
 
-.gradient-purple {
-  background: linear-gradient(135deg, var(--primary-purple) 0%, #5B21B6 100%);
+.v-main { background-color: var(--c-bg) !important; }
+
+.v-card {
+  background-color: var(--c-card) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--r-lg) !important;
 }
 
-.gradient-pink {
-  background: linear-gradient(135deg, var(--primary-hotpink) 0%, var(--primary-pink) 100%);
-}
+.v-list { background-color: transparent !important; }
+.v-navigation-drawer { background-color: var(--c-sidebar) !important; }
 
-/* Utility classes for doodle effects */
-.dashed-border {
-  border: 4px dashed var(--primary-purple);
-  border-radius: 20px;
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
-.chunky-shadow {
-  box-shadow: 
-    5px 5px 0 var(--primary-gold),
-    10px 10px 0 var(--primary-blue);
-}
+/* ── Selection ── */
+::selection { background: var(--c-accent-soft); color: var(--c-text); }
 
-.glow-effect {
-  box-shadow: 0 0 20px var(--shadow-pink);
-}
+/* ── Accessibility ── */
+html.ui-compact .v-main { --v-layout-top: 56px !important; }
+html.ui-compact .v-btn { min-height: 32px; }
+html.ui-compact .v-card-text { padding-top: 12px !important; padding-bottom: 12px !important; }
+html.a11y-large-text { font-size: 118%; }
+html.a11y-high-contrast { --c-border: rgba(255,255,255,0.28); --c-text: #ffffff; --c-muted: #cccccc; }
+html.a11y-reduced-motion * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 
-/* Button Animations */
-.btn-hover {
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
+/* ── Utility ── */
+.fill-height { height: 100%; }
+.text-muted { color: var(--c-muted) !important; }
 
 .btn-hover:hover {
   transform: translateY(-4px) scale(1.05);
@@ -114,7 +133,7 @@ body {
 
 /* Text shadow effects */
 .text-doodle {
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive;
+  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
   font-weight: 900;
   text-shadow: 
     3px 3px 0 var(--primary-gold),
@@ -128,4 +147,19 @@ body {
 
 .tilt-right {
   transform: rotate(1deg);
+}
+
+/* ── Cursor paint trail (Home page) ─────────────────────────────────── */
+.cursor-trail-dot {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  animation: trail-fade 0.85s ease-out forwards;
+}
+
+@keyframes trail-fade {
+  0%   { opacity: 0.75; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.05); }
 }

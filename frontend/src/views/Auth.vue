@@ -1,164 +1,106 @@
 <template>
-  <v-container fluid class="auth-page">
-    <v-row class="justify-center align-center min-vh-100">
-      <v-col cols="12" sm="10" md="8" lg="6" xl="4">
-        <v-card class="auth-card" elevation="24">
-          <v-card-title class="auth-header pa-8 text-center">
-            <div class="auth-icon mb-4">
-              🏝️
-            </div>
-            <h1 class="auth-title">
-              {{ isLogin ? 'Welcome Back Doodler!' : 'Join DoodleVerse' }}
-            </h1>
-            <p class="auth-subtitle mt-2">
-              {{ isLogin ? 'Sign in to share your art' : 'Create account to start doodling' }}
-            </p>
-          </v-card-title>
+  <div class="auth-page">
+    <div class="auth-card-wrap">
+      <div class="auth-brand">
+        <v-icon size="28" color="primary" class="mr-2">mdi-palette</v-icon>
+        <span>DoodleVerse</span>
+      </div>
 
-          <v-card-text class="pa-8">
-            <v-form ref="form" @submit.prevent="handleSubmit">
-              <v-text-field
-                v-if="!isLogin"
-                v-model="formData.name"
-                label="Your Name"
-                variant="outlined"
-                prepend-inner-icon="mdi-account"
-                :rules="!isLogin ? [v => !!v || 'Name is required'] : []"
-                class="mb-4"
-                color="deep-purple-darken-2"
-              ></v-text-field>
-
-              <v-text-field
-                v-if="!isLogin"
-                v-model="formData.username"
-                label="Username"
-                variant="outlined"
-                prepend-inner-icon="mdi-at"
-                :rules="!isLogin ? [
-                  v => !!v || 'Username is required',
-                  v => /^[a-zA-Z0-9_]+$/.test(v) || 'Username can only contain letters, numbers, and underscores'
-                ] : []"
-                class="mb-4"
-                color="deep-purple-darken-2"
-              ></v-text-field>
-
-              <v-text-field
-                v-model="formData.email"
-                label="Email"
-                type="email"
-                variant="outlined"
-                prepend-inner-icon="mdi-email"
-                :rules="[
-                  v => !!v || 'Email is required',
-                  v => /.+@.+\..+/.test(v) || 'Email must be valid'
-                ]"
-                class="mb-4"
-                color="deep-purple-darken-2"
-              ></v-text-field>
-
-              <v-text-field
-                v-model="formData.password"
-                :label="isLogin ? 'Password' : 'Create Password'"
-                :type="showPassword ? 'text' : 'password'"
-                variant="outlined"
-                prepend-inner-icon="mdi-lock"
-                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showPassword = !showPassword"
-                :rules="[
-                  v => !!v || 'Password is required',
-                  v => v.length >= 6 || 'Password must be at least 6 characters'
-                ]"
-                class="mb-4"
-                color="deep-purple-darken-2"
-              ></v-text-field>
-
-              <v-text-field
-                v-if="!isLogin"
-                v-model="formData.password_confirmation"
-                label="Confirm Password"
-                :type="showPassword ? 'text' : 'password'"
-                variant="outlined"
-                prepend-inner-icon="mdi-lock-check"
-                :rules="!isLogin ? [
-                  v => !!v || 'Please confirm your password',
-                  v => v === formData.password || 'Passwords must match'
-                ] : []"
-                class="mb-4"
-                color="deep-purple-darken-2"
-              ></v-text-field>
-
-              <v-alert
-                v-if="error"
-                type="error"
-                variant="tonal"
-                class="mb-4"
-                closable
-                @click:close="error = ''"
-              >
-                {{ error }}
-              </v-alert>
-
-              <v-btn
-                type="submit"
-                block
-                size="x-large"
-                class="auth-submit-btn mb-4"
-                :loading="loading"
-              >
-                <v-icon start>{{ isLogin ? 'mdi-login' : 'mdi-account-plus' }}</v-icon>
-                {{ isLogin ? 'Sign In' : 'Create Account' }}
-              </v-btn>
-
-              <v-divider class="my-6"></v-divider>
-
-              <div class="text-center">
-                <p class="toggle-text mb-3">
-                  {{ isLogin ? "Don't have an account?" : 'Already have an account?' }}
-                </p>
-                <v-btn
-                  variant="text"
-                  class="toggle-btn"
-                  @click="toggleMode"
-                >
-                  {{ isLogin ? 'Sign Up' : 'Sign In' }}
-                </v-btn>
-              </div>
-            </v-form>
-          </v-card-text>
-        </v-card>
-
-        <!-- Floating decorations -->
-        <div class="floating-elements">
-          <div class="float-item float-1">🎨</div>
-          <div class="float-item float-2">✨</div>
-          <div class="float-item float-3">🖌️</div>
-          <div class="float-item float-4">🌟</div>
+      <v-card class="auth-card" elevation="0">
+        <div class="auth-card-header">
+          <h1 class="auth-title">{{ isLogin ? t('auth.welcomeBack') : t('auth.join') }}</h1>
+          <p class="auth-sub">{{ isLogin ? t('auth.signInShare') : t('auth.createAccountStart') }}</p>
         </div>
-      </v-col>
-    </v-row>
 
-    <v-snackbar
-      v-model="snackbar"
-      :color="snackbarColor"
-      :timeout="3000"
-    >
+        <div class="auth-card-body">
+          <v-form ref="form" @submit.prevent="handleSubmit">
+            <v-text-field v-if="!isLogin" v-model="formData.name" :label="t('auth.yourName')"
+              variant="outlined" prepend-inner-icon="mdi-account" density="comfortable"
+              :rules="!isLogin ? [v => !!v || t('auth.yourName')] : []" class="mb-3" />
+
+            <v-text-field v-if="!isLogin" v-model="formData.username" :label="t('auth.username')"
+              variant="outlined" prepend-inner-icon="mdi-at" density="comfortable"
+              :rules="!isLogin ? [v => !!v || t('auth.username')] : []" class="mb-3" />
+
+            <v-text-field v-model="formData.email"
+              :label="isLogin ? t('auth.emailOrUsername') : t('auth.email')"
+              :type="isLogin ? 'text' : 'email'"
+              variant="outlined" prepend-inner-icon="mdi-email" density="comfortable"
+              :rules="[v => !!v || (isLogin ? t('auth.emailOrUsername') : t('auth.email'))]"
+              class="mb-3" />
+
+            <v-text-field v-model="formData.password"
+              :label="isLogin ? t('auth.password') : t('auth.createPassword')"
+              :type="showPassword ? 'text' : 'password'"
+              variant="outlined" prepend-inner-icon="mdi-lock" density="comfortable"
+              :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              @click:append-inner="showPassword = !showPassword"
+              :rules="[v => !!v || t('auth.password'), v => v.length >= 6 || t('auth.password')]"
+              class="mb-3" />
+
+            <v-text-field v-if="!isLogin" v-model="formData.password_confirmation"
+              :label="t('auth.confirmPassword')"
+              :type="showPassword ? 'text' : 'password'"
+              variant="outlined" prepend-inner-icon="mdi-lock-check" density="comfortable"
+              :rules="!isLogin ? [v => !!v || t('auth.confirmPassword'), v => v === formData.password || t('auth.confirmPassword')] : []"
+              class="mb-3" />
+
+            <v-alert v-if="error" type="error" variant="tonal" density="compact"
+              closable class="mb-3" @click:close="error = ''">
+              {{ error }}
+            </v-alert>
+
+            <v-btn type="submit" block color="primary" size="large" rounded="lg"
+              :loading="loading" class="mb-4">
+              <v-icon start>{{ isLogin ? 'mdi-login' : 'mdi-account-plus' }}</v-icon>
+              {{ isLogin ? t('auth.signIn') : t('auth.signUp') }}
+            </v-btn>
+
+            <v-btn block variant="outlined" size="large" rounded="lg" class="mb-4"
+              prepend-icon="mdi-google" :loading="googleLoading" @click="startGoogleLogin">
+              {{ t('auth.continueWithGoogle') }}
+            </v-btn>
+
+            <v-divider class="mb-4" />
+
+            <div class="auth-toggle">
+              <span class="toggle-label">{{ isLogin ? t('auth.noAccount') : t('auth.hasAccount') }}</span>
+              <v-btn variant="text" color="primary" density="compact" @click="toggleMode">
+                {{ isLogin ? t('auth.signUp') : t('auth.signIn') }}
+              </v-btn>
+            </div>
+          </v-form>
+        </div>
+      </v-card>
+    </div>
+
+    <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000" rounded="lg">
       {{ snackbarText }}
     </v-snackbar>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
-import '@/styles/auth.css'
+import { useErrorHandler } from '@/composables/useErrorHandler'
+import { useI18n } from '@/composables/useI18n'
 
 const router = useRouter()
+const route = useRoute()
+const { t } = useI18n()
+const { getErrorMessage } = useErrorHandler()
 const form = ref(null)
 const isLogin = ref(true)
 const showPassword = ref(false)
 const loading = ref(false)
+const googleLoading = ref(false)
 const error = ref('')
+
+const backendBaseUrl = (import.meta.env.VITE_BACKEND_URL
+  || (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, ''))
+  .replace(/\/$/, '')
 
 const formData = ref({
   name: '',
@@ -193,28 +135,64 @@ const handleSubmit = async () => {
 
   try {
     const endpoint = isLogin.value ? '/login' : '/register'
-    const response = await api.post(endpoint, formData.value)
+    const loginData = isLogin.value
+      ? { login: formData.value.email || formData.value.username, password: formData.value.password }
+      : formData.value
 
-    // Store token (backend returns it as access_token)
+    const response = await api.post(endpoint, loginData)
+
     localStorage.setItem('token', response.data.access_token)
     localStorage.setItem('user', JSON.stringify(response.data.user))
 
-    showSnackbar(
-      isLogin.value ? 'Welcome back! 🎉' : 'Account created successfully! 🎨',
-      'success'
-    )
+    showSnackbar(isLogin.value ? t('auth.welcomeBackToast') : t('auth.accountCreatedToast'), 'success')
 
-    // Redirect to home after short delay
     setTimeout(() => {
       router.push('/')
     }, 1000)
-
   } catch (err) {
     console.error('Auth error:', err)
-    error.value = err.response?.data?.message || 
-                  (isLogin.value ? 'Invalid credentials. Please try again.' : 'Registration failed. Please try again.')
+    error.value = getErrorMessage(err)
   } finally {
     loading.value = false
+  }
+}
+
+const startGoogleLogin = () => {
+  googleLoading.value = true
+  window.location.href = `${backendBaseUrl}/api/auth/google/redirect`
+}
+
+const handleGoogleCallback = async () => {
+  const token = typeof route.query.token === 'string' ? route.query.token : ''
+  const oauthError = typeof route.query.oauth_error === 'string' ? route.query.oauth_error : ''
+
+  if (oauthError) {
+    error.value = t('auth.googleLoginFailed')
+    await router.replace({ path: '/auth' })
+    return
+  }
+
+  if (!token) {
+    return
+  }
+
+  loading.value = true
+  googleLoading.value = true
+
+  try {
+    localStorage.setItem('token', token)
+    const response = await api.get('/user')
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    showSnackbar(t('auth.welcomeBackToast'), 'success')
+    await router.replace('/')
+  } catch (err) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    error.value = getErrorMessage(err)
+    await router.replace({ path: '/auth' })
+  } finally {
+    loading.value = false
+    googleLoading.value = false
   }
 }
 
@@ -223,4 +201,77 @@ const showSnackbar = (text, color = 'success') => {
   snackbarColor.value = color
   snackbar.value = true
 }
+
+onMounted(() => {
+  handleGoogleCallback()
+})
 </script>
+
+<style scoped>
+/* Auth page */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-bg);
+  padding: 24px;
+}
+
+.auth-card-wrap {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-text);
+}
+
+.auth-card {
+  background: var(--c-card) !important;
+  border: 1px solid var(--c-border-md) !important;
+  border-radius: var(--r-xl) !important;
+  overflow: hidden;
+}
+
+.auth-card-header {
+  padding: 28px 28px 0;
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--c-text);
+  margin-bottom: 6px;
+}
+
+.auth-sub {
+  font-size: 0.875rem;
+  color: var(--c-muted);
+}
+
+.auth-card-body {
+  padding: 24px 28px 28px;
+}
+
+.auth-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.toggle-label {
+  color: var(--c-muted);
+}
+</style>

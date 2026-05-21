@@ -1,38 +1,61 @@
 <template>
-  <div class="chat-page">
-    <div class="chat-page-header">
-      <h1 class="page-title">💬 Community Chat</h1>
-      <p class="page-subtitle">Connect with fellow artists and share your creativity!</p>
-    </div>
-
-    <div class="chat-content">
-      <ChatBox />
-    </div>
-
-    <div class="chat-tips">
-      <div class="tip-card">
-        <v-icon size="32" class="mb-2">mdi-lightbulb-outline</v-icon>
-        <h3>Chat Tips</h3>
-        <ul>
-          <li>Be respectful and kind to others</li>
-          <li>Share your artwork and get feedback</li>
-          <li>Ask questions and help fellow artists</li>
-          <li>Have fun and make friends! 🎨</li>
-        </ul>
-      </div>
-    </div>
+  <div class="chat-page" :style="pageStyle">
+    <ChatBox />
   </div>
 </template>
 
 <script>
+import { ref, onMounted, onUnmounted } from 'vue'
 import ChatBox from '@/components/ChatBox'
+
+const NAV_HEIGHT = 72
 
 export default {
   name: 'Chat',
-  components: {
-    ChatBox
+  components: { ChatBox },
+  setup() {
+    const pageStyle = ref({})
+
+    const updateHeight = () => {
+      const h = window.visualViewport ? window.visualViewport.height : window.innerHeight
+      pageStyle.value = { height: `${Math.max(120, h - NAV_HEIGHT)}px` }
+    }
+
+    onMounted(() => {
+      updateHeight()
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateHeight)
+        window.visualViewport.addEventListener('scroll', updateHeight)
+      } else {
+        window.addEventListener('resize', updateHeight)
+      }
+    })
+
+    onUnmounted(() => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateHeight)
+        window.visualViewport.removeEventListener('scroll', updateHeight)
+      } else {
+        window.removeEventListener('resize', updateHeight)
+      }
+    })
+
+    return { pageStyle }
   }
 }
 </script>
 
-<style scoped src="@/styles/chat.css"></style>
+<style scoped>
+.chat-page {
+  /* CSS fallback before JS runs; correct 72px nav offset */
+  height: calc(100dvh - 72px);
+  background: #1a1b1e;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 600px) {
+  .chat-page { height: calc(100svh - 72px); }
+}
+</style>

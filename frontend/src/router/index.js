@@ -25,15 +25,43 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/chat',
+    name: 'Chat',
+    component: () => import('@/views/Chat.vue')
+  },
+  {
     path: '/draw',
     name: 'Draw',
     component: () => import('@/views/Draw.vue'),
     meta: { requiresAuth: true }
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile/:username',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue')
+  },
+  {
     path: '/auth',
     name: 'Auth',
     component: () => import('@/views/Auth.vue')
+  },
+  {
+    path: '/invite/:token',
+    name: 'Invite',
+    component: () => import('@/views/Invite.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/Admin.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
@@ -42,6 +70,10 @@ const routes = [
   {
     path: '/signup',
     redirect: '/auth'
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 

@@ -7,4 +7,5 @@ export { default as EmptyState } from './EmptyState'
 export { default as GalleryGrid } from './GalleryGrid'
 export { default as ChatBox } from './ChatBox'
 export { default as ChatPreview } from './ChatPreview'
+export { default as DrawDialog } from './DrawDialog'
 

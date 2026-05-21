@@ -1,93 +1,56 @@
 <template>
   <footer class="app-footer">
-    <div class="footer-content">
-      <!-- Brand Section -->
-      <div class="footer-section brand-section">
-        <div class="footer-logo">
-          <h3>DoodleVerse</h3>
-        </div>
-        <p class="footer-tagline">Where Artists Draw & Connect</p>
-        <div class="social-links">
-          <a href="#" class="social-icon" title="Discord">
-            <v-icon>mdi-discord</v-icon>
-          </a>
-          <a href="#" class="social-icon" title="Twitter">
-            <v-icon>mdi-twitter</v-icon>
-          </a>
-          <a href="#" class="social-icon" title="Instagram">
-            <v-icon>mdi-instagram</v-icon>
-          </a>
-          <a href="#" class="social-icon" title="GitHub">
-            <v-icon>mdi-github</v-icon>
-          </a>
-        </div>
+    <div class="footer-inner">
+      <!-- Brand -->
+      <div class="footer-brand">
+        <span class="footer-logo">DoodleVerse</span>
+        <span class="footer-copy">© {{ currentYear }}</span>
       </div>
 
-      <!-- Quick Links -->
-      <div class="footer-section">
-        <h4>Explore</h4>
-        <ul class="footer-links">
-          <li><router-link to="/">🏠 Home</router-link></li>
-          <li><router-link to="/gallery">🖼️ Gallery</router-link></li>
-          <li><router-link to="/friends">👥 Friends</router-link></li>
-          <li><router-link to="/messages">💬 Messages</router-link></li>
-          <li><router-link to="/draw">🎨 Start Drawing</router-link></li>
-        </ul>
+      <!-- Weekly theme -->
+      <router-link
+        v-if="weeklyTheme"
+        to="/draw"
+        class="theme-badge"
+        :style="{ borderColor: weeklyTheme.color_hex + '55', background: weeklyTheme.color_hex + '18' }"
+      >
+        <span>{{ weeklyTheme.emoji }}</span>
+        <span class="theme-label">{{ t('footer.weekTheme') }}: <strong>{{ weeklyTheme.theme_name }}</strong></span>
+      </router-link>
+
+      <!-- Draw CTA -->
+      <router-link to="/draw" class="draw-cta">
+        <v-icon size="14">mdi-pencil</v-icon>
+        {{ t('common.draw') }}
+      </router-link>
+
+      <!-- Live stats -->
+      <div class="footer-stats">
+        <span class="stat-pill">
+          <span class="stat-dot online" />
+          {{ stats.onlineUsers }} {{ t('footer.doodlersOnline') }}
+        </span>
+        <span class="stat-pill">
+          🖼️ {{ stats.artworks }} {{ t('footer.publishedArt') }}
+        </span>
+        <span class="stat-pill">
+          🎨 {{ stats.totalUsers }} {{ t('footer.totalDoodlers') }}
+        </span>
       </div>
 
-      <!-- Community -->
-      <div class="footer-section">
-        <h4>Community</h4>
-        <ul class="footer-links">
-          <li><a href="#">👥 About Us</a></li>
-          <li><a href="#">📜 Guidelines</a></li>
-          <li><a href="#">🎓 Tutorials</a></li>
-          <li><a href="#">🏆 Featured Artists</a></li>
-        </ul>
+      <!-- Language toggle -->
+      <div class="footer-lang">
+        <button
+          class="lang-btn"
+          :class="{ active: language === 'lv' }"
+          @click="setLanguage('lv')"
+        >LV</button>
+        <button
+          class="lang-btn"
+          :class="{ active: language === 'en' }"
+          @click="setLanguage('en')"
+        >EN</button>
       </div>
-
-      <!-- Stats & Support -->
-      <div class="footer-section">
-        <h4>Live Stats</h4>
-        <div class="footer-stats">
-          <div class="stat-item">
-            <span class="stat-icon">👥</span>
-            <span class="stat-value">{{ stats.totalUsers }}+</span>
-            <span class="stat-label">Total Doodlers</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-icon">💚</span>
-            <span class="stat-value">{{ stats.onlineUsers }}</span>
-            <span class="stat-label">Doodlers Online</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-icon">🎨</span>
-            <span class="stat-value">{{ stats.artworks }}+</span>
-            <span class="stat-label">Published Art</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Bar -->
-    <div class="footer-bottom">
-      <div class="footer-bottom-content">
-        <p class="copyright">© {{ currentYear }} DoodleVerse. Made with 💜 for doodlers everywhere</p>
-        <div class="footer-bottom-links">
-          <a href="#">Privacy Policy</a>
-          <span class="separator">•</span>
-          <a href="#">Terms of Service</a>
-          <span class="separator">•</span>
-          <a href="#">Contact</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Floating Elements -->
-    <div class="footer-decoration">
-      <span class="floating-star">⭐</span>
-      <span class="floating-star">✨</span>
-      <span class="floating-star">🌟</span>
     </div>
   </footer>
 </template>
@@ -95,64 +58,215 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
+import { useI18n } from '@/composables/useI18n'
 
 export default {
   name: 'AppFooter',
   setup() {
-    const stats = ref({
-      totalUsers: 0,
-      onlineUsers: 0,
-      artworks: 0
-    })
-
+    const { t, language, setLanguage } = useI18n()
+    const stats = ref({ totalUsers: 0, onlineUsers: 0, artworks: 0 })
+    const weeklyTheme = ref(null)
     const currentYear = computed(() => new Date().getFullYear())
 
     const loadStats = async () => {
       try {
-        // Load real stats from backend
-        const response = await api.get('/stats')
-        const data = response.data.data
+        const res = await api.get('/stats')
+        const d = res.data.data
+        stats.value = { totalUsers: d.total_users, onlineUsers: d.online_users, artworks: d.total_artworks }
+      } catch {
+        // leave as zero
+      }
+    }
 
-        stats.value.totalUsers = data.total_users
-        stats.value.onlineUsers = data.online_users
-        stats.value.artworks = data.total_artworks
-      } catch (error) {
-        console.error('Failed to load stats:', error)
-        // Fallback: try to get from drawings endpoint
-        try {
-          const response = await api.get('/drawings')
-          const drawings = response.data.data
-          
-          stats.value.artworks = drawings.length
-          const uniqueArtists = new Set(drawings.map(d => d.artist_name))
-          stats.value.totalUsers = uniqueArtists.size
-          stats.value.onlineUsers = Math.max(1, Math.floor(stats.value.totalUsers * 0.1))
-        } catch (fallbackError) {
-          // Final fallback
-          stats.value = {
-            totalUsers: 0,
-            onlineUsers: 0,
-            artworks: 0
-          }
-        }
+    const loadTheme = async () => {
+      try {
+        const res = await api.get('/weekly-theme')
+        weeklyTheme.value = res.data.theme ?? null
+      } catch {
+        weeklyTheme.value = null
       }
     }
 
     onMounted(() => {
       loadStats()
-      
-      // Refresh stats every 60 seconds
-      setInterval(() => {
-        loadStats()
-      }, 60000)
+      loadTheme()
+      setInterval(loadStats, 60000)
     })
 
-    return {
-      stats,
-      currentYear
-    }
+    return { t, language, setLanguage, stats, weeklyTheme, currentYear }
   }
 }
 </script>
 
-<style scoped src="./AppFooter.css"></style>
+<style scoped>
+/* AppFooter Component Styles */
+.app-footer {
+  background: var(--c-sidebar, #1a1b1e);
+  border-top: 1px solid var(--c-border, rgba(255,255,255,0.07));
+  color: var(--c-text-dim, #adb5bd);
+}
+
+.footer-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+/* Brand */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.footer-logo {
+  font-size: 0.95rem;
+  font-weight: 900;
+  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-copy {
+  font-size: 0.78rem;
+  color: var(--c-muted, #868e96);
+}
+
+/* Weekly theme badge */
+.theme-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--c-text-dim, #adb5bd);
+  border: 1px solid;
+  border-radius: 20px;
+  padding: 4px 12px;
+  text-decoration: none;
+  transition: opacity 120ms;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.theme-badge:hover {
+  opacity: 0.8;
+}
+
+.theme-label strong {
+  color: var(--c-text, #dbdee1);
+  font-weight: 700;
+}
+
+/* Draw CTA */
+.draw-cta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a78bfa;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  text-decoration: none;
+  transition: background 120ms, border-color 120ms;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.draw-cta:hover {
+  background: rgba(124,58,237,0.22);
+  border-color: rgba(124,58,237,0.45);
+}
+
+/* Stats */
+.footer-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--c-muted, #868e96);
+  background: var(--c-surface, #25262b);
+  border: 1px solid var(--c-border, rgba(255,255,255,0.07));
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.stat-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 5px rgba(34,197,94,0.5);
+}
+
+/* Language toggle */
+.footer-lang {
+  display: flex;
+  gap: 2px;
+  background: var(--c-surface, #25262b);
+  border: 1px solid var(--c-border, rgba(255,255,255,0.07));
+  border-radius: 8px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  color: var(--c-muted, #868e96);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+  letter-spacing: 0.04em;
+}
+
+.lang-btn:hover {
+  color: var(--c-text, #dbdee1);
+}
+
+.lang-btn.active {
+  background: var(--c-elevated, #383a40);
+  color: var(--c-text, #dbdee1);
+}
+
+@media (max-width: 768px) {
+  .footer-inner {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .footer-stats {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .stat-pill {
+    flex: 1;
+    justify-content: center;
+  }
+}
+</style>
