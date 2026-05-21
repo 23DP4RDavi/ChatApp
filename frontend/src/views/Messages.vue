@@ -149,7 +149,7 @@
             <img v-if="currentUser?.avatar_thumbnail" :src="currentUser.avatar_thumbnail" alt="" />
             <v-icon v-else size="14">mdi-account</v-icon>
           </v-avatar>
-          <span class="sidebar-user-name">{{ currentUser?.name || t('messagesPage.you') }}</span>
+          <span class="sidebar-user-name">{{ getUserDisplayName(currentUser, t('messagesPage.you')) }}</span>
           <v-spacer />
           <v-btn icon variant="text" size="x-small" to="/settings" :title="t('messagesPage.settings')">
             <v-icon size="13">mdi-cog-outline</v-icon>
@@ -272,10 +272,10 @@
               <div v-for="pm in pinnedMessages" :key="pm.id" class="pinned-item" @click="scrollToMsg(pm.id); showPinnedPanel = false">
                 <v-avatar size="24" color="secondary" class="mr-2 flex-shrink-0">
                   <img v-if="pm.user?.avatar_thumbnail" :src="pm.user.avatar_thumbnail" alt="" />
-                  <span v-else style="font-size:0.6rem;font-weight:700">{{ pm.user?.name?.[0] }}</span>
+                  <span v-else style="font-size:0.6rem;font-weight:700">{{ getUserInitial(pm.user) }}</span>
                 </v-avatar>
                 <div class="pinned-item-body">
-                  <span class="pinned-item-author">{{ pm.user?.name }}</span>
+                  <span class="pinned-item-author">{{ getUserDisplayName(pm.user) }}</span>
                   <span class="pinned-item-content">{{ pm.content || t('messagesPage.drawingLabel') }}</span>
                 </div>
               </div>
@@ -301,7 +301,7 @@
               <div class="msg-avatar-col">
                 <v-avatar v-if="!message._grouped" size="36" class="msg-avatar-img" color="secondary">
                   <img v-if="message.user?.avatar_thumbnail" :src="message.user.avatar_thumbnail" alt="" />
-                  <span v-else style="font-size:0.72rem;font-weight:700">{{ message.user?.name?.[0] }}</span>
+                  <span v-else style="font-size:0.72rem;font-weight:700">{{ getUserInitial(message.user) }}</span>
                 </v-avatar>
                 <span v-else class="msg-side-time">{{ formatTime(message.created_at) }}</span>
               </div>
@@ -311,9 +311,9 @@
                 <div v-if="message.reply_to" class="msg-reply-ref" @click.stop="scrollToMsg(message.reply_to.id)">
                   <v-avatar size="14" color="secondary" class="mr-1 flex-shrink-0">
                     <img v-if="message.reply_to.user?.avatar_thumbnail" :src="message.reply_to.user.avatar_thumbnail" alt="" />
-                    <span v-else style="font-size:0.5rem">{{ message.reply_to.user?.name?.[0] }}</span>
+                    <span v-else style="font-size:0.5rem">{{ getUserInitial(message.reply_to.user) }}</span>
                   </v-avatar>
-                  <span class="msg-reply-ref-author">{{ message.reply_to.user?.name }}</span>
+                  <span class="msg-reply-ref-author">{{ getUserDisplayName(message.reply_to.user) }}</span>
                   <span class="msg-reply-ref-content">{{ message.reply_to.content ? message.reply_to.content.slice(0, 80) : t('messagesPage.drawingLabel') }}</span>
                 </div>
 
@@ -321,7 +321,7 @@
                   <span class="msg-author"
                     :class="{ 'msg-author--self': message.user_id === currentUserId }"
                     :style="getMsgAuthorColor(message.user_id) ? { color: getMsgAuthorColor(message.user_id) } : {}">
-                    {{ message.user?.name }}
+                    {{ getUserDisplayName(message.user) }}
                   </span>
                   <span v-for="role in getMsgAuthorRoles(message.user_id)" :key="role.id"
                     class="msg-role-badge" :style="{ background: role.color + '33', color: role.color, borderColor: role.color + '66' }">
@@ -411,8 +411,8 @@
             </div>
             <span class="typing-text">
               {{ typingUsers.length > 1
-                ? t('messagesPage.typingMany').replace('{name}', typingUsers[0].name).replace('{count}', typingUsers.length - 1)
-                : t('messagesPage.typingOne').replace('{name}', typingUsers[0].name) }}
+                ? t('messagesPage.typingMany').replace('{name}', getUserDisplayName(typingUsers[0])).replace('{count}', typingUsers.length - 1)
+                : t('messagesPage.typingOne').replace('{name}', getUserDisplayName(typingUsers[0])) }}
             </span>
           </div>
         </transition>
@@ -421,7 +421,7 @@
         <transition name="reply-slide">
           <div v-if="replyingTo" class="reply-compose-bar">
             <v-icon size="14" color="primary" class="mr-1">mdi-reply</v-icon>
-            <span>{{ t('messagesPage.replyingTo') }} <strong>{{ replyingTo.user?.name }}</strong></span>
+            <span>{{ t('messagesPage.replyingTo') }} <strong>{{ getUserDisplayName(replyingTo.user) }}</strong></span>
             <span class="reply-compose-preview">{{ replyingTo.content ? replyingTo.content.slice(0, 60) : t('messagesPage.drawingLabel') }}</span>
             <v-spacer />
             <v-btn icon size="x-small" variant="text" @click="replyingTo = null"><v-icon size="14">mdi-close</v-icon></v-btn>
@@ -569,12 +569,12 @@
                   <div class="member-avatar-wrap">
                     <v-avatar size="28" color="secondary">
                       <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" />
-                      <span v-else style="font-size:0.65rem;font-weight:700">{{ m.name?.[0] }}</span>
+                      <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(m) }}</span>
                     </v-avatar>
                     <span class="member-online-dot"></span>
                   </div>
                   <div class="member-info">
-                    <span class="member-name" :style="getMsgAuthorColor(m.id) ? { color: getMsgAuthorColor(m.id) } : {}">{{ m.name }}</span>
+                    <span class="member-name" :style="getMsgAuthorColor(m.id) ? { color: getMsgAuthorColor(m.id) } : {}">{{ getUserDisplayName(m) }}</span>
                     <div class="member-roles">
                       <span v-for="role in getMsgAuthorRoles(m.id)" :key="role.id"
                         class="member-role-tag" :style="{ background: role.color + '22', color: role.color }">{{ role.name }}</span>
@@ -588,11 +588,11 @@
                   <div class="member-avatar-wrap">
                     <v-avatar size="28" color="secondary">
                       <img v-if="m.avatar_thumbnail" :src="m.avatar_thumbnail" alt="" />
-                      <span v-else style="font-size:0.65rem;font-weight:700">{{ m.name?.[0] }}</span>
+                      <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(m) }}</span>
                     </v-avatar>
                   </div>
                   <div class="member-info">
-                    <span class="member-name">{{ m.name }}</span>
+                    <span class="member-name">{{ getUserDisplayName(m) }}</span>
                     <div class="member-roles">
                       <span v-for="role in getMsgAuthorRoles(m.id)" :key="role.id"
                         class="member-role-tag" :style="{ background: role.color + '22', color: role.color }">{{ role.name }}</span>
@@ -926,10 +926,10 @@
             <div v-for="member in serverMembers" :key="member.id" class="settings-row">
               <v-avatar size="28" color="secondary" class="mr-2">
                 <img v-if="member.avatar_thumbnail" :src="member.avatar_thumbnail" alt="" />
-                <span v-else style="font-size:0.65rem;font-weight:700">{{ member.name?.[0] }}</span>
+                <span v-else style="font-size:0.65rem;font-weight:700">{{ getUserInitial(member) }}</span>
               </v-avatar>
               <div class="flex-grow-1">
-                <div class="text-body-2">{{ member.name }} <v-chip v-if="member.is_owner" size="x-small" color="warning" label class="ml-1">{{ t('messagesPage.ownerChip') }}</v-chip></div>
+                <div class="text-body-2">{{ getUserDisplayName(member) }} <v-chip v-if="member.is_owner" size="x-small" color="warning" label class="ml-1">{{ t('messagesPage.ownerChip') }}</v-chip></div>
                 <div class="text-caption" style="color:var(--c-muted)">@{{ member.username }}</div>
                 <div class="member-roles-row">
                   <v-chip v-for="role in member.roles" :key="role.id"
@@ -1025,10 +1025,10 @@
           <div v-if="addFriendResults.length > 0" class="add-friend-results">
             <div v-for="user in addFriendResults" :key="user.id" class="add-friend-row">
               <v-avatar size="32" color="primary" class="mr-2">
-                <span style="font-size:0.72rem;font-weight:700">{{ (user.name || 'U')[0].toUpperCase() }}</span>
+                <span style="font-size:0.72rem;font-weight:700">{{ getUserInitial(user, 'U') }}</span>
               </v-avatar>
               <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-medium">{{ user.name }}</div>
+                <div class="text-body-2 font-weight-medium">{{ getUserDisplayName(user) }}</div>
                 <div class="text-caption" style="color:var(--c-muted)">@{{ user.username }}</div>
               </div>
               <v-btn v-if="!addFriendSent.has(user.id)" size="small" color="primary" variant="tonal"
@@ -1062,7 +1062,7 @@
     <DrawDialog v-model="showDrawDialog" @save="onMsgDrawingSave" />
 
     <!-- Server icon draw dialog (1:1) -->
-    <DrawDialog v-model="serverIconDrawDialogOpen" :square-only="true" @save="onServerIconDrawSave" />
+    <DrawDialog v-model="serverIconDrawDialogOpen" :square-only="true" :show-caption="false" @save="onServerIconDrawSave" />
 
   </div>
 </template>
@@ -1072,6 +1072,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 import { renderPaths } from '@/utils/renderPaths'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
@@ -1301,7 +1302,7 @@ const offlineMembers = computed(() =>
 )
 
 const composerPlaceholder = computed(() => {
-  if (replyingTo.value) return t('messagesPage.replyToPlaceholder').replace('{name}', replyingTo.value.user?.name || '')
+  if (replyingTo.value) return t('messagesPage.replyToPlaceholder').replace('{name}', getUserDisplayName(replyingTo.value.user, ''))
   if (selectedChannel.value) return t('messagesPage.messageChannelPlaceholder').replace('{channel}', selectedChannel.value.name)
   return t('messagesPage.typeMessage')
 })
@@ -1438,13 +1439,13 @@ const matchConversation = (conversation, query) => {
     const name = conversation.name?.toLowerCase() || ''
     const preview = conversation.latest_message?.content?.toLowerCase() || ''
     const participants = Array.isArray(conversation.participants)
-      ? conversation.participants.map((user) => user?.name?.toLowerCase() || '').join(' ')
+      ? conversation.participants.map((user) => `${user?.username || ''} ${user?.name || ''}`.toLowerCase()).join(' ')
       : ''
 
     return [name, preview, participants].some((field) => field.includes(query))
   }
 
-  const name = conversation.other_user?.name?.toLowerCase() || ''
+  const name = `${conversation.other_user?.username || ''} ${conversation.other_user?.name || ''}`.toLowerCase()
   const username = conversation.other_user?.username?.toLowerCase() || ''
   const preview = conversation.latest_message?.content?.toLowerCase() || ''
 
@@ -1461,7 +1462,7 @@ const groupConversations = computed(() => {
 
 const groupFriendOptions = computed(() => {
   return availableFriends.value.map((friend) => ({
-    title: `${friend.name} (@${friend.username})`,
+    title: friend.username ? `@${friend.username}` : getUserDisplayName(friend),
     value: friend.id,
   }))
 })
@@ -1581,7 +1582,7 @@ const getConversationTitle = (conversation) => {
   if (conversation.type === 'group') {
     return conversation.name || t('messagesPage.unnamedGroup')
   }
-  return conversation.other_user?.name || t('common.anonymous')
+  return getUserDisplayName(conversation.other_user, t('common.anonymous'))
 }
 
 const getConversationSubtitle = (conversation) => {
@@ -2135,7 +2136,8 @@ const sendMessage = async () => {
     updated_at: new Date().toISOString(),
     user: currentUser.value || {
       id: currentUserId.value,
-      name: 'You',
+      name: currentUser.value?.name || 'You',
+      username: currentUser.value?.username || 'you',
       avatar_thumbnail: null,
     },
   }
@@ -3002,6 +3004,9 @@ onUnmounted(() => {
   width: 128px;
   height: 128px;
   background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .server-icon-actions {
@@ -3019,6 +3024,8 @@ onUnmounted(() => {
 .server-icon-canvas {
   display: block;
   cursor: crosshair;
+  width: 100%;
+  height: 100%;
 }
 
 .color-picker-sm {

@@ -30,10 +30,10 @@
         <div v-for="user in searchResults" :key="user.id" class="user-row">
           <v-avatar size="36" color="primary" class="mr-3">
               <v-img v-if="user.avatar_thumbnail" :src="user.avatar_thumbnail" cover />
-              <span v-else class="text-caption font-weight-bold">{{ user.name?.[0]?.toUpperCase() }}</span>
+              <span v-else class="text-caption font-weight-bold">{{ getUserInitial(user) }}</span>
           </v-avatar>
           <div class="user-info">
-            <span class="user-name">{{ user.name }}</span>
+            <span class="user-name">{{ getUserDisplayName(user) }}</span>
             <span class="user-handle">@{{ user.username }}</span>
           </div>
           <v-btn size="small" color="primary" variant="tonal" rounded="lg"
@@ -67,10 +67,10 @@
             <div v-for="friend in friends" :key="friend.id" class="user-row">
               <v-avatar size="36" color="secondary" class="mr-3">
                 <v-img v-if="friend.avatar_thumbnail" :src="friend.avatar_thumbnail" cover />
-                <span v-else class="text-caption font-weight-bold">{{ friend.name?.[0]?.toUpperCase() }}</span>
+                <span v-else class="text-caption font-weight-bold">{{ getUserInitial(friend) }}</span>
               </v-avatar>
               <div class="user-info">
-                <span class="user-name clickable-name" @click="$router.push('/profile/' + friend.username)">{{ friend.name }}</span>
+                <span class="user-name clickable-name" @click="$router.push('/profile/' + friend.username)">{{ getUserDisplayName(friend) }}</span>
                 <span class="user-handle">@{{ friend.username }}</span>
               </div>
               <span v-if="onlineIds.has(friend.id)" class="online-dot" title="Online" />
@@ -100,10 +100,10 @@
             <div v-for="req in pendingReceived" :key="req.id" class="user-row">
               <v-avatar size="36" color="warning" class="mr-3">
                 <v-img v-if="req.user?.avatar_thumbnail" :src="req.user.avatar_thumbnail" cover />
-                <span v-else class="text-caption font-weight-bold">{{ req.user?.name?.[0]?.toUpperCase() }}</span>
+                <span v-else class="text-caption font-weight-bold">{{ getUserInitial(req.user) }}</span>
               </v-avatar>
               <div class="user-info">
-                <span class="user-name">{{ req.user?.name }}</span>
+                <span class="user-name">{{ getUserDisplayName(req.user) }}</span>
                 <span class="user-handle">@{{ req.user?.username }}</span>
               </div>
               <div class="row-actions">
@@ -122,10 +122,10 @@
             <div v-for="req in pendingSent" :key="req.id" class="user-row">
               <v-avatar size="36" color="info" class="mr-3">
                 <v-img v-if="req.friend?.avatar_thumbnail" :src="req.friend.avatar_thumbnail" cover />
-                <span v-else class="text-caption font-weight-bold">{{ req.friend?.name?.[0]?.toUpperCase() }}</span>
+                <span v-else class="text-caption font-weight-bold">{{ getUserInitial(req.friend) }}</span>
               </v-avatar>
               <div class="user-info">
-                <span class="user-name">{{ req.friend?.name }}</span>
+                <span class="user-name">{{ getUserDisplayName(req.friend) }}</span>
                 <span class="user-handle">@{{ req.friend?.username }}</span>
               </div>
               <v-chip size="small" color="info" variant="tonal">{{ t('friendsPage.pending') }}</v-chip>
@@ -152,6 +152,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 const router = useRouter()
 const { t } = useI18n()

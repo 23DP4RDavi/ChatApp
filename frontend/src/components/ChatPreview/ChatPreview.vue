@@ -19,7 +19,7 @@
 
       <div v-else class="message-list">
         <div v-for="message in recentMessages" :key="message.id" class="preview-message">
-          <div class="message-user">{{ message.user.name }}</div>
+          <div class="message-user">{{ getUserDisplayName(message.user) }}</div>
           <div class="message-content">{{ truncate(message.content, 50) }}</div>
         </div>
       </div>
@@ -36,6 +36,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
+import { getUserDisplayName } from '@/utils/displayName'
 
 export default {
   name: 'ChatPreview',

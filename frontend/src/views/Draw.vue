@@ -874,7 +874,7 @@ const loadUserName = () => {
   if (userData) {
     try {
       const user = JSON.parse(userData)
-      userName.value = user.name || 'Anonymous'
+      userName.value = user.username || user.name || 'Anonymous'
     } catch (e) {
       userName.value = 'Anonymous'
     }

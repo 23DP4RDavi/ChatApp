@@ -45,14 +45,14 @@
               <img
                 v-if="msg.user?.avatar_thumbnail"
                 :src="msg.user.avatar_thumbnail"
-                :alt="msg.user?.name"
+                :alt="getUserDisplayName(msg.user)"
                 class="cb-avatar-img"
               />
-              <span v-else>{{ (msg.user?.name || '?')[0].toUpperCase() }}</span>
+              <span v-else>{{ getUserInitial(msg.user) }}</span>
             </div>
 
             <div class="cb-bubble-group">
-              <div v-if="msg.user_id !== currentUser?.id" class="cb-sender-name">{{ msg.user?.name }}</div>
+              <div v-if="msg.user_id !== currentUser?.id" class="cb-sender-name">{{ getUserDisplayName(msg.user) }}</div>
 
               <div class="cb-bubble" :style="msg.user_id === currentUser?.id ? { '--bubble-bg': userColor(msg.user_id, true) } : {}">
                 <div
@@ -231,6 +231,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 export default {
   name: 'ChatBox',

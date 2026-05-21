@@ -16,12 +16,12 @@
         <div class="profile-avatar-wrap">
           <v-avatar size="96" class="profile-avatar">
             <v-img v-if="profile.avatar_thumbnail" :src="profile.avatar_thumbnail" cover />
-            <span v-else class="profile-initials">{{ profile.name?.charAt(0)?.toUpperCase() }}</span>
+            <span v-else class="profile-initials">{{ getUserInitial(profile) }}</span>
           </v-avatar>
         </div>
         <div class="profile-info">
-          <h1 class="profile-name">{{ profile.name }}</h1>
-          <p class="profile-username">@{{ profile.username }}</p>
+          <h1 class="profile-name">{{ getUserDisplayName(profile) }}</h1>
+          <p v-if="profile.username && profile.name && profile.username !== profile.name" class="profile-username">{{ profile.name }}</p>
           <div class="profile-stats">
             <div class="stat-block">
               <span class="stat-value">{{ profile.drawings_count }}</span>
@@ -69,6 +69,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useI18n } from '@/composables/useI18n'
+import { getUserDisplayName, getUserInitial } from '@/utils/displayName'
 
 const { t } = useI18n()
 
