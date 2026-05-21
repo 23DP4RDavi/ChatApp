@@ -214,6 +214,7 @@ let lastSeenTimestamp = null
 const handleUserUpdated = () => {
   const wasLoggedIn = !!user.value
   loadUser()
+  refreshUserFromApi()
   if (!wasLoggedIn && user.value) {
     loadLastSeen()
     fetchNotifications()
@@ -252,8 +253,25 @@ const resetNotificationsState = () => {
   }
 }
 
+const refreshUserFromApi = async () => {
+  const token = localStorage.getItem('token')
+  if (!token) return
+
+  try {
+    const response = await api.get('/user')
+    const freshUser = response.data?.user || null
+    if (!freshUser) return
+
+    user.value = freshUser
+    localStorage.setItem('user', JSON.stringify(freshUser))
+  } catch {
+    // Keep local fallback when refresh fails.
+  }
+}
+
 onMounted(() => {
   loadUser()
+  refreshUserFromApi()
   window.addEventListener('user-updated', handleUserUpdated)
   if (user.value) {
     loadLastSeen()
@@ -272,6 +290,7 @@ onUnmounted(() => {
 watch(() => route.fullPath, () => {
   const wasLoggedIn = !!user.value
   loadUser()
+  refreshUserFromApi()
 
   if (!wasLoggedIn && user.value) {
     loadLastSeen()
@@ -289,6 +308,11 @@ watch(() => route.fullPath, () => {
 
 const loadUser = () => {
   const userData = localStorage.getItem('user')
+  if (!userData) {
+    user.value = null
+    return
+  }
+
   if (userData) {
     try {
       user.value = JSON.parse(userData)

@@ -123,23 +123,17 @@ class ConversationController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:80',
-            'participant_ids' => 'required|array|min:1|max:30',
+            'participant_ids' => 'nullable|array|max:30',
             'participant_ids.*' => 'integer|distinct|exists:users,id',
         ]);
 
         $userId = Auth::id();
 
-        $participantIds = collect($validated['participant_ids'])
+        $participantIds = collect($validated['participant_ids'] ?? [])
             ->map(fn ($id) => (int) $id)
             ->filter(fn ($id) => $id !== (int) $userId)
             ->unique()
             ->values();
-
-        if ($participantIds->isEmpty()) {
-            return response()->json([
-                'message' => 'Group must include at least one other participant',
-            ], 422);
-        }
 
         $friendIds = Friendship::where('status', 'accepted')
             ->where(function ($query) use ($userId) {

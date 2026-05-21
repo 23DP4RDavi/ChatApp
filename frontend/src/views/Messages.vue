@@ -1470,7 +1470,7 @@ const groupFriendOptions = computed(() => {
 })
 
 const canCreateGroup = computed(() => {
-  return newGroupName.value.trim().length >= 2 && selectedGroupMemberIds.value.length > 0 && !isCreatingGroup.value
+  return newGroupName.value.trim().length >= 2 && !isCreatingGroup.value
 })
 
 const isGroupOwner = computed(() => {
