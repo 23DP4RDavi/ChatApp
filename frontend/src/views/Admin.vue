@@ -95,17 +95,26 @@
 
         <!-- ── MESSAGES ─────────────────────────────────────────── -->
         <div v-else-if="activeTab === 'messages'" class="admin-section">
+          <div v-if="conversationFilter" class="admin-inline-filter">
+            <span>
+              Showing messages for conversation #{{ conversationFilter.id }}
+              <strong>{{ conversationFilter.name }}</strong>
+            </span>
+            <button class="act-btn act-btn--warn" @click="clearConversationMessageFilter">Clear</button>
+          </div>
           <div v-if="loading" class="admin-loading">{{ t('adminPage.loading') }}</div>
           <table v-else class="admin-table">
             <thead>
               <tr>
-                <th>{{ t('adminPage.id') }}</th><th>{{ t('adminPage.user') }}</th><th>{{ t('adminPage.content') }}</th><th>{{ t('adminPage.type') }}</th><th>{{ t('adminPage.sent') }}</th><th></th>
+                <th>{{ t('adminPage.id') }}</th><th>{{ t('adminPage.user') }}</th><th>Conversation</th><th>Channel</th><th>{{ t('adminPage.content') }}</th><th>{{ t('adminPage.type') }}</th><th>{{ t('adminPage.sent') }}</th><th></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="msg in items" :key="msg.id">
                 <td class="td-muted">{{ msg.id }}</td>
                 <td class="td-bold">{{ msg.user?.name || '—' }}</td>
+                <td class="td-muted">{{ msg.conversation?.name || (msg.conversation?.type === 'group' ? 'Group' : 'Direct') || '—' }}</td>
+                <td class="td-muted">{{ msg.channel?.name || '—' }}</td>
                 <td class="td-content">{{ msg.drawing_data ? t('adminPage.drawing') : msg.content }}</td>
                 <td><span :class="msg.drawing_data ? 'badge badge--purple' : 'badge badge--blue'">{{ msg.drawing_data ? t('adminPage.drawing') : t('adminPage.text') }}</span></td>
                 <td class="td-muted">{{ fmtDate(msg.created_at) }}</td>
@@ -151,7 +160,7 @@
           <table v-else class="admin-table">
             <thead>
               <tr>
-                <th>{{ t('adminPage.id') }}</th><th>{{ t('adminPage.convName') }}</th><th>{{ t('adminPage.convType') }}</th><th>{{ t('adminPage.members') }}</th><th>{{ t('adminPage.created') }}</th><th></th>
+                <th>{{ t('adminPage.id') }}</th><th>{{ t('adminPage.convName') }}</th><th>{{ t('adminPage.convType') }}</th><th>{{ t('adminPage.members') }}</th><th>Channels</th><th>Messages</th><th>{{ t('adminPage.created') }}</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -160,8 +169,18 @@
                 <td class="td-bold">{{ c.name || t('adminPage.directMessage') }}</td>
                 <td><span :class="c.type === 'group' ? 'badge badge--purple' : 'badge badge--blue'">{{ c.type || 'dm' }}</span></td>
                 <td>{{ c.participants_count }}</td>
+                <td>
+                  <div class="conv-channel-list">
+                    <span v-if="!c.channels || c.channels.length === 0" class="td-muted">—</span>
+                    <span v-else v-for="ch in c.channels" :key="ch.id" class="conv-channel-chip">
+                      #{{ ch.name }}
+                    </span>
+                  </div>
+                </td>
+                <td>{{ c.messages_count ?? 0 }}</td>
                 <td class="td-muted">{{ fmtDate(c.created_at) }}</td>
                 <td class="td-actions">
+                  <button class="act-btn act-btn--warn" @click="goToConversationMessages(c)">Messages</button>
                   <button class="act-btn act-btn--danger" @click="deleteConversation(c.id)">{{ t('adminPage.delete') }}</button>
                 </td>
               </tr>
@@ -299,6 +318,7 @@ export default {
     const items         = ref([])
     const loading       = ref(false)
     const search        = ref('')
+    const conversationFilter = ref(null)
     const paginationMeta = ref(null)
     let   searchTimer   = null
 
@@ -324,6 +344,9 @@ export default {
         if (!ep) return
         const params = { page }
         if (search.value) params.q = search.value
+        if (activeTab.value === 'messages' && conversationFilter.value?.id) {
+          params.conversation_id = conversationFilter.value.id
+        }
         const res = await api.get(ep, { params })
         if (activeTab.value === 'themes') {
           items.value = res.data
@@ -345,7 +368,11 @@ export default {
       searchTimer = setTimeout(() => loadTab(1), 400)
     }
 
-    watch(activeTab, () => { search.value = ''; loadTab(1) })
+    watch(activeTab, (tab) => {
+      search.value = ''
+      if (tab !== 'messages') conversationFilter.value = null
+      loadTab(1)
+    })
 
     onMounted(() => { if (isAdmin.value) loadTab(1) })
 
@@ -412,6 +439,19 @@ export default {
       loadTab(1)
     }
 
+    const goToConversationMessages = (conversation) => {
+      conversationFilter.value = {
+        id: conversation.id,
+        name: conversation.name || t('adminPage.directMessage'),
+      }
+      activeTab.value = 'messages'
+    }
+
+    const clearConversationMessageFilter = () => {
+      conversationFilter.value = null
+      loadTab(1)
+    }
+
     // ── Theme actions ─────────────────────────────────────────
     const isThemeActive = (th) => {
       if (!th.starts_at || !th.ends_at) return false
@@ -464,12 +504,14 @@ export default {
     return {
       isAdmin, t, tabs, statCards, activeTab, currentTab,
       stats, items, loading, search, paginationMeta,
+      conversationFilter,
       modal, fmtDate, isThemeActive,
       onSearch, loadPage, loadTab,
       openEditUser, deleteUser,
       deleteMessage,
       openEditDrawing, deleteDrawing,
       deleteConversation,
+      goToConversationMessages, clearConversationMessageFilter,
       openNewTheme, openEditTheme, deleteTheme,
     }
   }
@@ -606,6 +648,41 @@ export default {
 .td-bold    { font-weight: 700; color: #e0e1ef !important; }
 .td-content { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .td-actions { display: flex; gap: 6px; }
+
+.admin-inline-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124,106,247,.35);
+  background: rgba(124,106,247,.12);
+  border-radius: 10px;
+  color: #d5cffd;
+  font-size: 13px;
+}
+
+.conv-channel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conv-channel-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(91,142,245,.14);
+  color: #9dbcfb;
+  font-size: 11px;
+  font-weight: 700;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── badges ─────────────────────────────────────────────────── */
 .badge {

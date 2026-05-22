@@ -96,11 +96,28 @@ class AdminController extends Controller
     {
         $this->assertAdmin($request);
         $q = $request->query('q', '');
-        $query = Message::with('user')
+        $conversationId = $request->query('conversation_id');
+
+        $query = Message::with([
+            'user:id,name',
+            'conversation:id,name,type',
+            'channel:id,conversation_id,name,type',
+        ])
             ->orderBy('created_at', 'desc');
-        if ($q) {
-            $query->where('content', 'like', "%{$q}%");
+
+        if ($conversationId) {
+            $query->where('conversation_id', $conversationId);
         }
+
+        if ($q) {
+            $query->where(function ($inner) use ($q) {
+                $inner->where('content', 'like', "%{$q}%")
+                    ->orWhereHas('user', function ($userQuery) use ($q) {
+                        $userQuery->where('name', 'like', "%{$q}%");
+                    });
+            });
+        }
+
         return response()->json($query->paginate(30));
     }
 
@@ -153,7 +170,10 @@ class AdminController extends Controller
     {
         $this->assertAdmin($request);
         return response()->json(
-            Conversation::withCount('participants')
+            Conversation::with([
+                'channels:id,conversation_id,name,type',
+            ])
+                ->withCount(['participants', 'messages'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(20)
         );
