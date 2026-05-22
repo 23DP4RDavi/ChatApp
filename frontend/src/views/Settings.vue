@@ -439,6 +439,100 @@ const applyAvatarFloodFill = (sx, sy, fillHex) => {
   ctx.putImageData(imageData, 0, 0)
 }
 
+const drawAvatarShapeOnCtx = (ctx, shapeType, start, end, { color, width, fill = false }) => {
+  ctx.save()
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = width
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+
+  if (shapeType === 'line') {
+    ctx.beginPath()
+    ctx.moveTo(start.x, start.y)
+    ctx.lineTo(end.x, end.y)
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
+
+  if (shapeType === 'arrow') {
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const angle = Math.atan2(dy, dx)
+    const headLen = Math.max(10, width * 4)
+    ctx.beginPath()
+    ctx.moveTo(start.x, start.y)
+    ctx.lineTo(end.x, end.y)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(end.x, end.y)
+    ctx.lineTo(end.x - headLen * Math.cos(angle - Math.PI / 6), end.y - headLen * Math.sin(angle - Math.PI / 6))
+    ctx.lineTo(end.x - headLen * Math.cos(angle + Math.PI / 6), end.y - headLen * Math.sin(angle + Math.PI / 6))
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+    return
+  }
+
+  const x = Math.min(start.x, end.x)
+  const y = Math.min(start.y, end.y)
+  const w = Math.abs(end.x - start.x)
+  const h = Math.abs(end.y - start.y)
+
+  if (shapeType === 'rectangle') {
+    if (fill) ctx.fillRect(x, y, w, h)
+    ctx.strokeRect(x, y, w, h)
+    ctx.restore()
+    return
+  }
+
+  if (shapeType === 'circle') {
+    ctx.beginPath()
+    ctx.ellipse(x + w / 2, y + h / 2, Math.max(1, w / 2), Math.max(1, h / 2), 0, 0, Math.PI * 2)
+    if (fill) ctx.fill()
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
+
+  const drawPolygon = (points) => {
+    if (!points.length) return
+    ctx.beginPath()
+    ctx.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y)
+    ctx.closePath()
+    if (fill) ctx.fill()
+    ctx.stroke()
+  }
+
+  if (shapeType === 'triangle') {
+    drawPolygon([
+      { x: x + w / 2, y },
+      { x, y: y + h },
+      { x: x + w, y: y + h },
+    ])
+    ctx.restore()
+    return
+  }
+
+  if (shapeType === 'star') {
+    const cx = x + w / 2
+    const cy = y + h / 2
+    const outer = Math.max(1, Math.min(w, h) / 2)
+    const inner = outer * 0.45
+    const points = []
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? outer : inner
+      const a = (-Math.PI / 2) + (i * Math.PI / 5)
+      points.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) })
+    }
+    drawPolygon(points)
+  }
+
+  ctx.restore()
+}
+
 const redrawAvatarCanvas = () => {
   if (!avatarCtx.value || !avatarCanvas.value) return
 
@@ -460,6 +554,19 @@ const redrawAvatarCanvas = () => {
     if (path?.type === 'fill') {
       const mappedPoint = mapPoint({ x: path.x || 0, y: path.y || 0 })
       applyAvatarFloodFill(mappedPoint.x, mappedPoint.y, path.color || '#000000')
+      return
+    }
+
+    if (path?.type === 'shape') {
+      const shapeType = path.shapeType || path.shape
+      if (!shapeType || !path.start || !path.end) return
+      const mappedStart = mapPoint(path.start)
+      const mappedEnd = mapPoint(path.end)
+      drawAvatarShapeOnCtx(avatarCtx.value, shapeType, mappedStart, mappedEnd, {
+        color: path.color || '#000000',
+        width: (path.width || 2) * scale,
+        fill: !!path.fill,
+      })
       return
     }
 
@@ -488,6 +595,23 @@ const redrawAvatarCanvas = () => {
     avatarCtx.value.lineCap = brushType === 'square' ? 'square' : 'round'
     avatarCtx.value.lineJoin = brushType === 'square' ? 'miter' : 'round'
     avatarCtx.value.globalAlpha = brushType === 'marker' ? 0.35 : 1
+
+    if (path.points.length === 1) {
+      const mappedPoint = mapPoint(path.points[0])
+      if (brushType === 'square') {
+        const side = Math.max(1, avatarCtx.value.lineWidth)
+        avatarCtx.value.fillStyle = path.color || '#000000'
+        avatarCtx.value.fillRect(mappedPoint.x - side / 2, mappedPoint.y - side / 2, side, side)
+      } else {
+        avatarCtx.value.fillStyle = path.color || '#000000'
+        avatarCtx.value.beginPath()
+        avatarCtx.value.arc(mappedPoint.x, mappedPoint.y, Math.max(0.5, avatarCtx.value.lineWidth / 2), 0, Math.PI * 2)
+        avatarCtx.value.fill()
+      }
+      avatarCtx.value.globalAlpha = 1
+      return
+    }
+
     avatarCtx.value.beginPath()
 
     path.points.forEach((point, index) => {
