@@ -597,8 +597,10 @@ const fetchDrawings = async () => {
 
     const response = await api.get('/drawings', { params })
     drawings.value = response.data.data || response.data
-    for (const drawing of drawings.value) {
-      await checkVoteStatus(drawing)
+    if (isAuthenticated.value) {
+      for (const drawing of drawings.value) {
+        await checkVoteStatus(drawing)
+      }
     }
   } catch (error) {
     console.error('Error:', error)

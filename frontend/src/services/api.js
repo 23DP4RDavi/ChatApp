@@ -31,11 +31,14 @@ apiClient.interceptors.response.use(
   error => {
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to auth
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem('user')
-      if (window.location.pathname !== '/auth') {
-        window.location.href = '/auth'
+      const token = localStorage.getItem(TOKEN_KEY)
+      // Only force auth redirect when the user was actually logged in.
+      if (token) {
+        localStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem('user')
+        if (window.location.pathname !== '/auth') {
+          window.location.href = '/auth'
+        }
       }
     }
     
