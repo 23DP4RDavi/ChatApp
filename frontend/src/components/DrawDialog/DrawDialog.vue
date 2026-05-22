@@ -445,6 +445,22 @@ const replayStroke = (path) => {
   c.restore()
 }
 
+const drawPoint = (c, point, color, width, brush) => {
+  if (!c || !point) return
+  c.save()
+  c.globalAlpha = brush === 'marker' ? 0.5 : 1
+  c.fillStyle = color
+  if (brush === 'square') {
+    const side = Math.max(1, width)
+    c.fillRect(point.x - side / 2, point.y - side / 2, side, side)
+  } else {
+    c.beginPath()
+    c.arc(point.x, point.y, Math.max(0.5, width / 2), 0, Math.PI * 2)
+    c.fill()
+  }
+  c.restore()
+}
+
 // ── Shape drawing ─────────────────────────────────────────────────────────────
 const normalizeRect = (s, e) => ({
   x: Math.min(s.x, e.x), y: Math.min(s.y, e.y),
@@ -653,6 +669,22 @@ const startDrawing = (e) => {
 
   currentPath.value = [pos]
   if (brushType.value === 'spray') currentPath.value = [{ dots: sprayDots(pos) }]
+
+  if (brushType.value === 'spray') {
+    const firstSpray = currentPath.value[0]
+    if (firstSpray?.dots) {
+      firstSpray.dots.forEach(d => {
+        ctx.value.fillStyle = currentDrawingColor.value
+        ctx.value.beginPath()
+        ctx.value.arc(d.x, d.y, d.r, 0, Math.PI * 2)
+        ctx.value.fill()
+      })
+    }
+    return
+  }
+
+  // Render a point immediately so tap-only input creates a visible dot.
+  drawPoint(ctx.value, pos, currentDrawingColor.value, currentDrawingWidth.value, brushType.value)
 }
 
 const sprayDots = (pos) => {
@@ -753,6 +785,7 @@ const stopDrawing = () => {
     })
     shapeStartPoint.value = null; shapeEndPoint.value = null
     redoStack.value = []
+    redrawCanvas()
     return
   }
 
@@ -766,6 +799,7 @@ const stopDrawing = () => {
   })
   currentPath.value = []
   redoStack.value = []
+  redrawCanvas()
 }
 
 // ── Undo / redo / clear ───────────────────────────────────────────────────────

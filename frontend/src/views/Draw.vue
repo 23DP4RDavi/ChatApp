@@ -977,6 +977,22 @@ const getTouchPos = (e) => {
   return getCanvasPosition(e.touches[0].clientX, e.touches[0].clientY)
 }
 
+const drawPoint = (c, point, color, width, brush) => {
+  if (!c || !point) return
+  c.save()
+  c.globalAlpha = brush === 'marker' ? 0.35 : 1
+  c.fillStyle = color
+  if (brush === 'square') {
+    const side = Math.max(1, width)
+    c.fillRect(point.x - side / 2, point.y - side / 2, side, side)
+  } else {
+    c.beginPath()
+    c.arc(point.x, point.y, Math.max(0.5, width / 2), 0, Math.PI * 2)
+    c.fill()
+  }
+  c.restore()
+}
+
 const startPath = (pos) => {
   if (textEditorVisible.value) commitTextInput()
 
@@ -1024,12 +1040,34 @@ const startPath = (pos) => {
   }
 
   isDrawing.value = true
-  currentPath.value = [{
-    x: pos.x,
-    y: pos.y,
-    color: currentDrawingColor.value,
-    width: currentDrawingWidth.value
-  }]
+  const bType = tool.value === 'eraser' ? 'eraser' : brushType.value
+  const color = currentDrawingColor.value
+  const width = currentDrawingWidth.value
+
+  if (bType === 'spray') {
+    const density = 25
+    const radius = width * 3
+    const sprayDots = []
+    if (ctx.value) {
+      ctx.value.fillStyle = color
+      ctx.value.globalAlpha = 0.8
+      for (let i = 0; i < density; i++) {
+        const angle = Math.random() * Math.PI * 2
+        const r = Math.sqrt(Math.random()) * radius
+        const dot = { x: pos.x + r * Math.cos(angle), y: pos.y + r * Math.sin(angle), r: Math.max(0.5, width * 0.18) }
+        sprayDots.push(dot)
+        ctx.value.beginPath()
+        ctx.value.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2)
+        ctx.value.fill()
+      }
+      ctx.value.globalAlpha = 1
+    }
+    currentPath.value = [{ x: pos.x, y: pos.y, color, width, dots: sprayDots }]
+    return
+  }
+
+  currentPath.value = [{ x: pos.x, y: pos.y, color, width }]
+  drawPoint(ctx.value, pos, color, bType === 'marker' ? width * 2.5 : width, bType)
 }
 
 const startDrawing = (e) => {
@@ -1194,19 +1232,16 @@ const stopDrawing = () => {
 
   if (isDrawing.value && isShapeTool.value) {
     if (shapeStartPoint.value && shapeEndPoint.value) {
-      const moved = Math.abs(shapeEndPoint.value.x - shapeStartPoint.value.x) > 1 || Math.abs(shapeEndPoint.value.y - shapeStartPoint.value.y) > 1
-      if (moved) {
-        paths.value.push({
-          type: 'shape',
-          shape: tool.value,
-          start: { ...shapeStartPoint.value },
-          end: { ...shapeEndPoint.value },
-          color: currentDrawingColor.value,
-          width: currentDrawingWidth.value,
-          fill: shapeFill.value,
-        })
-        redoStack.value = []
-      }
+      paths.value.push({
+        type: 'shape',
+        shape: tool.value,
+        start: { ...shapeStartPoint.value },
+        end: { ...shapeEndPoint.value },
+        color: currentDrawingColor.value,
+        width: currentDrawingWidth.value,
+        fill: shapeFill.value,
+      })
+      redoStack.value = []
     }
     shapeStartPoint.value = null
     shapeEndPoint.value = null
@@ -1215,7 +1250,7 @@ const stopDrawing = () => {
     return
   }
 
-  if (isDrawing.value && currentPath.value.length > 1) {
+  if (isDrawing.value && currentPath.value.length > 0) {
     const bType = tool.value === 'eraser' ? 'eraser' : brushType.value
     paths.value.push({
       type: 'stroke',
@@ -1228,6 +1263,7 @@ const stopDrawing = () => {
   }
   currentPath.value = []
   isDrawing.value = false
+  redrawCanvas()
 }
 
 const undo = () => {
@@ -1320,6 +1356,12 @@ const redrawCanvas = () => {
     c.lineWidth = bType === 'marker' ? path.width * 2.5 : path.width
     c.lineCap = bType === 'square' ? 'square' : 'round'
     c.lineJoin = bType === 'square' ? 'miter' : 'round'
+    if (path.points.length === 1) {
+      const pt = path.points[0]
+      drawPoint(c, pt, path.color, bType === 'marker' ? path.width * 2.5 : path.width, bType)
+      c.globalAlpha = 1
+      return
+    }
     c.beginPath()
     path.points.forEach((point, index) => {
       if (index === 0) c.moveTo(point.x, point.y)

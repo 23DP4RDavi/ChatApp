@@ -503,7 +503,18 @@ export default {
 
     const renderOnePath = (canvasEl, ctx, p) => {
       if (p.type === 'stroke') {
-        if (!p.points || p.points.length < 2) return
+        if (!p.points || p.points.length === 0) return
+        if (p.points.length === 1) {
+          const pt = p.points[0]
+          ctx.save()
+          ctx.fillStyle = p.color
+          const r = Math.max(0.5, p.size / 2)
+          ctx.beginPath()
+          ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.restore()
+          return
+        }
         ctx.save()
         ctx.strokeStyle = p.color; ctx.lineWidth = p.size
         ctx.lineCap = 'round'; ctx.lineJoin = 'round'
@@ -670,6 +681,9 @@ export default {
         size:   drawTool.value === 'eraser' ? drawSize.value * 4 : drawSize.value,
         points: [pos],
       }
+
+      // Render an immediate point so tap-only input leaves a dot.
+      redraw()
     }
 
     const onPointerMove = (e) => {
@@ -698,8 +712,7 @@ export default {
 
       if (activePath.value) {
         const p = activePath.value
-        if (p.points.length === 1) p.points.push({ x: p.points[0].x + 0.5, y: p.points[0].y + 0.5 })
-        if (p.points.length >= 2) { redoStack.value = []; drawPaths.value.push(p) }
+        if (p.points.length >= 1) { redoStack.value = []; drawPaths.value.push(p) }
         activePath.value = null
         redraw()
       }

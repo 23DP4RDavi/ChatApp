@@ -22,6 +22,21 @@
       </div>
     </div>
 
+    <div class="gallery-header-mobile-stats d-flex d-sm-none">
+      <div class="stat-pill">
+        <v-icon size="14" class="mr-1">mdi-image-outline</v-icon>
+        {{ drawings.length }} {{ t('galleryPage.artworks') }}
+      </div>
+      <div class="stat-pill">
+        <v-icon size="14" color="error" class="mr-1">mdi-heart-outline</v-icon>
+        {{ totalVotes }}
+      </div>
+      <div class="stat-pill">
+        <v-icon size="14" class="mr-1">mdi-account-outline</v-icon>
+        {{ uniqueArtists }} {{ t('galleryPage.artists') }}
+      </div>
+    </div>
+
     <!-- Weekly theme banner -->
     <div v-if="weeklyTheme" class="theme-banner"
       :style="{ '--theme-color': weeklyTheme.color_hex }">
@@ -838,6 +853,15 @@ onUnmounted(() => {
   gap: 16px;
 }
 
+.gallery-header-mobile-stats {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 28px 12px;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
 .page-title {
   font-size: 1.6rem;
   font-weight: 800;
@@ -1504,5 +1528,198 @@ onUnmounted(() => {
   font-size: 0.78rem;
   color: var(--c-muted);
   font-weight: 600;
+}
+
+@media (max-width: 959px) {
+  .gallery-header,
+  .gallery-toolbar,
+  .gallery-tab-bar,
+  .drawings-grid,
+  .archive-container,
+  .theme-banner,
+  .gallery-header-mobile-stats {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .gallery-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 22px;
+    padding-bottom: 14px;
+  }
+
+  .gallery-toolbar {
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  .gallery-toolbar .sort-toggle,
+  .gallery-toolbar .period-select {
+    width: 100%;
+  }
+
+  .gallery-toolbar .search-input {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .gallery-tab-bar {
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+
+  .gallery-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .g-tab {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .theme-banner-inner {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .theme-badge {
+    position: static;
+    align-self: flex-start;
+  }
+
+  .theme-content {
+    align-items: flex-start;
+  }
+
+  .theme-emoji {
+    font-size: 2.3rem;
+  }
+
+  .theme-name {
+    font-size: 1.05rem;
+  }
+
+  .theme-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .theme-timer {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .timer-blocks {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .theme-draw-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .drawings-grid {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+  }
+
+  .archive-weeks-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .archive-week-card {
+    padding: 14px 12px;
+  }
+
+  .awh-theme {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .awh-name {
+    font-size: 1rem;
+  }
+
+  .detail-header,
+  .detail-footer,
+  .comments-section {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .detail-header {
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .gallery-page {
+    padding-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .page-sub {
+    font-size: 0.8rem;
+  }
+
+  .gallery-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gallery-toolbar > :last-child {
+    width: 100%;
+  }
+
+  .gallery-toolbar > :last-child :deep(.v-btn__content) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .drawings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-body {
+    padding: 11px 10px;
+  }
+
+  .timer-block {
+    min-width: 34px;
+    padding: 4px 6px;
+  }
+
+  .timer-sep {
+    margin-bottom: 8px;
+  }
+
+  .archive-week-card {
+    gap: 10px;
+  }
+
+  .awc-emoji {
+    font-size: 1.7rem;
+  }
+
+  .detail-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-actions > * {
+    width: 100%;
+  }
 }
 </style>
